@@ -39,6 +39,12 @@ variable "autoscaling_group_name" {
   type = string
 }
 
+variable "enable_public_access" {
+  description = "Whether to create an internet-facing NLB (true) or an internal NLB (false)"
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

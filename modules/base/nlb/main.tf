@@ -1,6 +1,7 @@
 resource "aws_lb" "this" {
   name               = var.name
   load_balancer_type = "network"
+  internal           = var.enable_public_access ? false : true
   subnets            = var.subnet_ids
   tags               = var.tags
 }
