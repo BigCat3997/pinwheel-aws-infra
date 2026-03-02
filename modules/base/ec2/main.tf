@@ -14,6 +14,11 @@ resource "aws_instance" "this" {
     delete_on_termination = var.volume_delete_on_termination
   }
 
+  metadata_options {
+    http_endpoint = var.metadata_http_endpoint
+    http_tokens   = var.metadata_http_tokens
+  }
+
   tags = merge(var.tags, {
     Name = var.name
   })
