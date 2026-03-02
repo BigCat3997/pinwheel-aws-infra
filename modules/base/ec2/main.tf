@@ -10,8 +10,8 @@ resource "aws_instance" "this" {
   root_block_device {
     volume_size           = var.volume_size
     volume_type           = var.volume_type
-    encrypted             = true
-    delete_on_termination = true
+    encrypted             = var.volume_encrypted
+    delete_on_termination = var.volume_delete_on_termination
   }
 
   tags = merge(var.tags, {

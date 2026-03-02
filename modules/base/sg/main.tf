@@ -2,9 +2,6 @@ resource "aws_security_group" "this" {
   name   = var.name
   vpc_id = var.vpc_id
 
-  ############################
-  # INGRESS RULES
-  ############################
   dynamic "ingress" {
     for_each = var.security_rules
     content {
@@ -20,9 +17,6 @@ resource "aws_security_group" "this" {
     }
   }
 
-  ############################
-  # EGRESS RULES
-  ############################
   dynamic "egress" {
     for_each = var.egress_rules
     content {
