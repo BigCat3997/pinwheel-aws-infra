@@ -3,7 +3,7 @@ resource "aws_route_table" "public" {
   vpc_id   = var.vpc_id
 
   dynamic "route" {
-    for_each = var.create_internet_gateway ? [1] : []
+    for_each = var.internet_gateway_id != null ? [1] : []
     content {
       cidr_block = "0.0.0.0/0"
       gateway_id = var.internet_gateway_id

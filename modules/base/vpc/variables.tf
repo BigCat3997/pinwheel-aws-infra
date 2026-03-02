@@ -12,6 +12,7 @@ variable "name" {
 variable "cidr_block" {
   description = "CIDR block for the VPC"
   type        = string
+  default     = null
 }
 
 variable "enable_dns_support" {

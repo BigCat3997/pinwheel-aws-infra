@@ -56,6 +56,18 @@ variable "volume_delete_on_termination" {
   default = true
 }
 
+variable "metadata_http_endpoint" {
+  description = "Whether to enable the instance metadata service"
+  type        = string
+  default     = "enabled"
+}
+
+variable "metadata_http_tokens" {
+  description = "Whether to require IMDSv2 for instance metadata access"
+  type        = string
+  default     = "required"
+}
+
 variable "key_name" {
   type        = string
   description = "Name of the EC2 key pair"
