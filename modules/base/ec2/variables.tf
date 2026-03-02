@@ -46,6 +46,16 @@ variable "volume_type" {
   type = string
 }
 
+variable "volume_encrypted" {
+  type    = bool
+  default = false
+}
+
+variable "volume_delete_on_termination" {
+  type    = bool
+  default = true
+}
+
 variable "key_name" {
   type        = string
   description = "Name of the EC2 key pair"
