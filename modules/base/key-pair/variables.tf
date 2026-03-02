@@ -9,9 +9,15 @@ variable "name" {
   type        = string
 }
 
+variable "public_key" {
+  type    = string
+  default = null
+}
+
 variable "public_key_path" {
   description = "The path to the public key file"
   type        = string
+  default     = null
 }
 
 variable "tags" {
