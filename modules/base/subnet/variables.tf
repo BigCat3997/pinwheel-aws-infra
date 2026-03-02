@@ -10,6 +10,7 @@ variable "public_subnets" {
     cidr = string
     az   = string
   }))
+  default = []
 }
 
 variable "private_subnets" {
@@ -19,6 +20,7 @@ variable "private_subnets" {
     cidr = string
     az   = string
   }))
+  default = []
 }
 
 variable "tags" {
