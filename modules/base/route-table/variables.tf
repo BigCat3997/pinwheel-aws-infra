@@ -8,6 +8,7 @@ variable "public_route_tables" {
   type = list(object({
     name = string
   }))
+  default = []
 }
 
 variable "private_route_tables" {
@@ -16,24 +17,23 @@ variable "private_route_tables" {
     name        = string
     nat_gw_name = string
   }))
-}
-
-variable "create_internet_gateway" {
-  description = "Whether to create an Internet Gateway"
-  type        = bool
+  default = []
 }
 
 variable "internet_gateway_id" {
   description = "Internet Gateway ID"
   type        = string
+  default     = null
 }
 
 variable "nat_gateway_ids" {
   description = "Map of NAT gateway names to IDs"
   type        = map(string)
+  default     = {}
 }
 
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
+  default     = {}
 }
