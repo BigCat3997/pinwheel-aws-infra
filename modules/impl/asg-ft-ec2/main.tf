@@ -21,10 +21,10 @@ module "eip" {
 }
 
 module "internet_gateway" {
-  source                = "../../base/internet-gateway"
-  vpc_id                = module.vpc.id
-  internet_gateway_name = var.internet_gateway_name
-  tags                  = var.tags
+  source = "../../base/internet-gateway"
+  vpc_id = module.vpc.id
+  name   = var.internet_gateway_name
+  tags   = var.tags
 }
 
 module "nat_gateway" {
