@@ -97,6 +97,7 @@ module "bastion_ec2" {
   volume_type                  = var.bastion_volume_type
   volume_encrypted             = var.bastion_volume_encrypted
   volume_delete_on_termination = var.bastion_volume_delete_on_termination
+  create_external_volume       = var.bastion_create_external_volume
   key_name                     = module.bastion_key_pair.name
 
   tags = var.tags

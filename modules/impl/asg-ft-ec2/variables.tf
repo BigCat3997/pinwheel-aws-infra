@@ -93,21 +93,22 @@ variable "nsg_definitions" {
   type = list(object({
     name = string
     security_rules = list(object({
-      from_port        = number
-      to_port          = number
-      protocol         = string
-      cidr_blocks      = optional(list(string))
-      ipv6_cidr_blocks = optional(list(string))
-      security_groups  = optional(list(string))
-      description      = optional(string)
+      from_port         = number
+      to_port           = number
+      protocol          = string
+      cidr_blocks       = optional(list(string))
+      ipv6_cidr_blocks  = optional(list(string))
+      security_group_id = optional(string)
+      description       = optional(string)
     }))
-    egress_rules = list(object({
-      from_port        = number
-      to_port          = number
-      protocol         = string
-      cidr_blocks      = optional(list(string))
-      ipv6_cidr_blocks = optional(list(string))
-      description      = optional(string)
+    egress_rules = list(
+      object({
+        from_port        = number
+        to_port          = number
+        protocol         = string
+        cidr_blocks      = optional(list(string))
+        ipv6_cidr_blocks = optional(list(string))
+        description      = optional(string)
     }))
   }))
   default = []
@@ -195,6 +196,12 @@ variable "bastion_volume_delete_on_termination" {
   type        = bool
   description = "Whether to delete bastion volume on termination"
   default     = true
+}
+
+variable "bastion_create_external_volume" {
+  type        = bool
+  description = "Whether to create an external volume for the bastion EC2 instance"
+  default     = false
 }
 
 variable "app_ec2_create_key_pair" {
