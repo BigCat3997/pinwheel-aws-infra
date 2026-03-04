@@ -23,3 +23,26 @@ resource "aws_instance" "this" {
     Name = var.name
   })
 }
+
+resource "aws_ebs_volume" "external" {
+  count = var.create_external_volume ? 1 : 0
+
+  availability_zone = aws_instance.this.availability_zone
+  size              = var.external_volume_size
+  type              = var.external_volume_type
+  encrypted         = var.external_volume_encrypted
+  iops              = var.external_volume_iops
+  throughput        = var.external_volume_throughput
+
+  tags = merge(var.tags, {
+    Name = "${var.name}-ebs"
+  })
+}
+
+resource "aws_volume_attachment" "external" {
+  count = var.create_external_volume ? 1 : 0
+
+  device_name = var.external_volume_device_name
+  volume_id   = aws_ebs_volume.external[0].id
+  instance_id = aws_instance.this.id
+}

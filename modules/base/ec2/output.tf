@@ -10,6 +10,16 @@ output "private_ip" {
   value = aws_instance.this.private_ip
 }
 
+output "external_volume_id" {
+  description = "ID of the external EBS volume when created"
+  value       = try(aws_ebs_volume.external[0].id, null)
+}
+
+output "external_volume_attachment_id" {
+  description = "ID of the external EBS volume attachment when created"
+  value       = try(aws_volume_attachment.external[0].id, null)
+}
+
 output "ssh_public" {
   description = "SSH command using public IP"
   value = aws_instance.this.public_ip != null ? (

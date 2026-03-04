@@ -9,7 +9,7 @@ variable "create_internet_gateway" {
   default     = true
 }
 
-variable "internet_gateway_name" {
+variable "name" {
   description = "Name tag for Internet Gateway"
   type        = string
 }

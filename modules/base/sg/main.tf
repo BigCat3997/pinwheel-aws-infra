@@ -2,36 +2,37 @@ resource "aws_security_group" "this" {
   name   = var.name
   vpc_id = var.vpc_id
 
-  dynamic "ingress" {
-    for_each = var.security_rules
-    content {
-      from_port = ingress.value.from_port
-      to_port   = ingress.value.to_port
-      protocol  = ingress.value.protocol
-
-      cidr_blocks      = lookup(ingress.value, "cidr_blocks", null)
-      ipv6_cidr_blocks = lookup(ingress.value, "ipv6_cidr_blocks", null)
-      security_groups  = lookup(ingress.value, "security_groups", null)
-
-      description = lookup(ingress.value, "description", null)
-    }
-  }
-
-  dynamic "egress" {
-    for_each = var.egress_rules
-    content {
-      from_port = egress.value.from_port
-      to_port   = egress.value.to_port
-      protocol  = egress.value.protocol
-
-      cidr_blocks      = lookup(egress.value, "cidr_blocks", null)
-      ipv6_cidr_blocks = lookup(egress.value, "ipv6_cidr_blocks", null)
-
-      description = lookup(egress.value, "description", null)
-    }
-  }
-
   tags = merge(var.tags, {
     Name = var.name
   })
+}
+
+# Note: source_security_group_id only supports single SG - use separate rules for multiple SGs
+resource "aws_security_group_rule" "ingress" {
+  for_each = { for idx, rule in var.security_rules : idx => rule }
+
+  type              = "ingress"
+  security_group_id = aws_security_group.this.id
+
+  from_port                = each.value.from_port
+  to_port                  = each.value.to_port
+  protocol                 = each.value.protocol
+  cidr_blocks              = lookup(each.value, "cidr_blocks", null)
+  ipv6_cidr_blocks         = lookup(each.value, "ipv6_cidr_blocks", null)
+  source_security_group_id = try(each.value.security_group_id, null)
+  description              = lookup(each.value, "description", null)
+}
+
+resource "aws_security_group_rule" "egress" {
+  for_each = { for idx, rule in var.egress_rules : idx => rule }
+
+  type              = "egress"
+  security_group_id = aws_security_group.this.id
+
+  from_port        = each.value.from_port
+  to_port          = each.value.to_port
+  protocol         = each.value.protocol
+  cidr_blocks      = lookup(each.value, "cidr_blocks", null)
+  ipv6_cidr_blocks = lookup(each.value, "ipv6_cidr_blocks", null)
+  description      = lookup(each.value, "description", null)
 }
