@@ -1,5 +1,5 @@
 resource "aws_subnet" "public" {
-  for_each = { for s in var.public_subnets : s.name => s }
+  for_each = var.create ? { for s in var.public_subnets : s.name => s } : {}
 
   vpc_id                  = var.vpc_id
   cidr_block              = each.value.cidr
@@ -12,7 +12,7 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  for_each = { for s in var.private_subnets : s.name => s }
+  for_each = var.create ? { for s in var.private_subnets : s.name => s } : {}
 
   vpc_id            = var.vpc_id
   cidr_block        = each.value.cidr
@@ -21,4 +21,32 @@ resource "aws_subnet" "private" {
   tags = merge(var.tags, {
     Name = each.key
   })
+}
+
+data "aws_subnet" "public" {
+  for_each = var.create ? {} : { for s in var.public_subnets : s.name => s }
+
+  filter {
+    name   = "tag:Name"
+    values = [each.key]
+  }
+
+  filter {
+    name   = "vpc-id"
+    values = [var.vpc_id]
+  }
+}
+
+data "aws_subnet" "private" {
+  for_each = var.create ? {} : { for s in var.private_subnets : s.name => s }
+
+  filter {
+    name   = "tag:Name"
+    values = [each.key]
+  }
+
+  filter {
+    name   = "vpc-id"
+    values = [var.vpc_id]
+  }
 }

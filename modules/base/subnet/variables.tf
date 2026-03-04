@@ -3,8 +3,14 @@ variable "vpc_id" {
   type        = string
 }
 
+variable "create" {
+  description = "Whether to create new subnets (true) or use existing ones via data source (false)"
+  type        = bool
+  default     = true
+}
+
 variable "public_subnets" {
-  description = "Public subnets configuration"
+  description = "Public subnets configuration. When create_subnets=true, requires name/cidr/az. When create_subnets=false, only name is used for lookup."
   type = list(object({
     name = string
     cidr = string
