@@ -5,6 +5,7 @@ variable "public_rt_subnet_associations" {
     sn_name = string
     rt_name = string
   }))
+  default = []
 }
 
 variable "rt_subnet_associations" {
@@ -14,6 +15,7 @@ variable "rt_subnet_associations" {
     sn_name = string
     rt_name = string
   }))
+  default = []
 }
 
 variable "public_subnet_ids" {
