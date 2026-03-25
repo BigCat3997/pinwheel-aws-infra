@@ -27,6 +27,16 @@ resource "aws_lb_listener" "this" {
 }
 
 resource "aws_autoscaling_attachment" "this" {
+  count = var.autoscaling_group_name != null && var.autoscaling_group_name != "" ? 1 : 0
+
   autoscaling_group_name = var.autoscaling_group_name
   lb_target_group_arn    = aws_lb_target_group.this.arn
+}
+
+resource "aws_lb_target_group_attachment" "instance_targets" {
+  for_each = { for idx, instance_id in var.target_instance_ids : idx => instance_id }
+
+  target_group_arn = aws_lb_target_group.this.arn
+  target_id        = each.value
+  port             = var.target_port
 }
