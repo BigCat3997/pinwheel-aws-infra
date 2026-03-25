@@ -31,3 +31,13 @@ output "ssh_private" {
   description = "SSH command using private IP (for bastion / VPN access)"
   value       = "ssh ${var.ssh_user}@${aws_instance.this.private_ip}"
 }
+
+output "instance_profile_name" {
+  description = "IAM instance profile name created by this module"
+  value       = try(aws_iam_instance_profile.this[0].name, null)
+}
+
+output "role_name" {
+  description = "IAM role name attached to the instance profile"
+  value       = var.role_name
+}

@@ -1,9 +1,18 @@
+resource "aws_iam_instance_profile" "this" {
+  count = var.instance_profile_name != null && var.role_name != null ? 1 : 0
+
+  name = var.instance_profile_name
+  role = var.role_name
+}
+
 resource "aws_instance" "this" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
   subnet_id                   = var.subnet_id
+  private_ip                  = var.private_ip
   associate_public_ip_address = var.associate_public_ip
   key_name                    = var.key_name
+  iam_instance_profile        = try(aws_iam_instance_profile.this[0].name, null)
   vpc_security_group_ids      = var.security_group_ids
   user_data                   = var.user_data
 

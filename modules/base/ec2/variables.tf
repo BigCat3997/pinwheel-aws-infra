@@ -18,6 +18,12 @@ variable "subnet_id" {
   description = "Subnet ID"
 }
 
+variable "private_ip" {
+  type        = string
+  description = "Fixed private IPv4 address for the instance"
+  default     = null
+}
+
 variable "security_group_ids" {
   type        = list(string)
   description = "Security group IDs"
@@ -113,6 +119,18 @@ variable "metadata_http_tokens" {
 variable "key_name" {
   type        = string
   description = "Name of the EC2 key pair"
+}
+
+variable "instance_profile_name" {
+  type        = string
+  description = "Name for IAM instance profile created by this module"
+  default     = null
+}
+
+variable "role_name" {
+  type        = string
+  description = "IAM role name to attach to the instance profile"
+  default     = null
 }
 
 variable "tags" {
