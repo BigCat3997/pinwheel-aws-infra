@@ -36,7 +36,14 @@ variable "listener_protocol" {
 }
 
 variable "autoscaling_group_name" {
-  type = string
+  type    = string
+  default = null
+}
+
+variable "target_instance_ids" {
+  description = "List of EC2 instance IDs to attach to the NLB target group"
+  type        = list(string)
+  default     = []
 }
 
 variable "enable_public_access" {
