@@ -9,6 +9,7 @@ variable "secrets" {
 variable "kms_key_id" {
   description = "KMS key ID for secret encryption"
   type        = string
+  default     = null
 }
 
 variable "tags" {
