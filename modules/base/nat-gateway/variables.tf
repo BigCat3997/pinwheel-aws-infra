@@ -1,20 +1,19 @@
-variable "nat_gateways" {
-  description = "List of NAT gateway objects"
-  type = list(object({
-    name        = string
-    subnet_name = string
-    eip_name    = string
-  }))
-  default = []
-}
-
-variable "public_subnet_ids" {
-  description = "Map of public subnet names to IDs"
-  type        = map(string)
-  default     = {}
-}
-
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
+}
+
+variable "name" {
+  description = "Name tag for the NAT gateway"
+  type        = string
+}
+
+variable "eip_id" {
+  type        = string
+  description = "EIP ID for the NAT gateway"
+}
+
+variable "subnet_id" {
+  type        = string
+  description = "Subnet ID for the NAT gateway"
 }
