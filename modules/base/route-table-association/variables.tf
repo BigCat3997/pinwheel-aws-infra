@@ -1,19 +1,19 @@
-variable "public_rt_subnet_associations" {
-  description = "List of public route table to subnet associations"
+variable "public_rtb_assoc" {
+  description = "Public route table to subnet associations"
   type = list(object({
-    key     = string
-    sn_name = string
-    rt_name = string
+    key              = string
+    subnet_name      = string
+    route_table_name = string
   }))
   default = []
 }
 
-variable "rt_subnet_associations" {
-  description = "List of private route table to subnet associations"
+variable "private_rtb_assoc" {
+  description = "Private route table to subnet associations"
   type = list(object({
-    key     = string
-    sn_name = string
-    rt_name = string
+    key              = string
+    subnet_name      = string
+    route_table_name = string
   }))
   default = []
 }
