@@ -1,8 +1,7 @@
-resource "aws_eip" "nat" {
-  for_each = { for gw in var.nat_gateways : gw.name => gw }
-  domain   = "vpc"
+resource "aws_eip" "this" {
+  domain = var.domain
 
   tags = merge(var.tags, {
-    Name = each.value.eip_name
+    Name = var.name
   })
 }
