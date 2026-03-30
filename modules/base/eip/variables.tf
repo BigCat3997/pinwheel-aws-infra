@@ -1,13 +1,15 @@
-variable "nat_gateways" {
-  description = "List of NAT gateway objects"
-  type        = list(object({
-    name     = string
-    eip_name = string
-    subnet_name = string
-  }))
-}
-
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
+}
+
+variable "name" {
+  description = "Name for the EIP"
+  type        = string
+}
+
+variable "domain" {
+  description = "The domain for the EIP"
+  type        = string
+  default     = "vpc"
 }
