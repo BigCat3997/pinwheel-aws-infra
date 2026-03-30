@@ -45,6 +45,36 @@ variable "create_access_key" {
   default     = false
 }
 
+variable "access_key_count" {
+  description = "Number of access keys to create for the user. If null, defaults to 1 if `create_access_key` is true, otherwise 0."
+  type        = number
+  default     = null
+}
+
+variable "create_codecommit_https_credential" {
+  description = "Whether to create HTTPS Git credentials for AWS CodeCommit for the created user."
+  type        = bool
+  default     = false
+}
+
+variable "create_login_profile" {
+  description = "Whether to create an AWS Console login profile (password) for the created user."
+  type        = bool
+  default     = false
+}
+
+variable "login_profile_password_length" {
+  description = "Generated console password length for IAM login profile."
+  type        = number
+  default     = 20
+}
+
+variable "login_profile_password_reset_required" {
+  description = "Whether the user must reset the console password at first login."
+  type        = bool
+  default     = true
+}
+
 variable "policy_arn" {
   description = "Policy ARN to attach to the user."
   type        = string
