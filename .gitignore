@@ -38,3 +38,6 @@ execute.sh
 
 # Ignore input json file
 local-data.json
+
+# lambda function zip files
+*.zip

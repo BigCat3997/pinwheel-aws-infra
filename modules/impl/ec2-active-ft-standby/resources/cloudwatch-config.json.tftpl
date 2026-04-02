@@ -1,0 +1,65 @@
+{
+    "agent": {
+        "metrics_collection_interval": 60,
+        "run_as_user": "root"
+    },
+    "metrics": {
+        "namespace": "CWAgent",
+        "metrics_collected": {
+            "cpu": {
+                "measurement": [
+                    {
+                        "name": "cpu_usage_idle",
+                        "rename": "CPU_IDLE",
+                        "unit": "Percent"
+                    }
+                ],
+                "totalcpu": false,
+                "metrics_collection_interval": 60
+            },
+            "mem": {
+                "measurement": [
+                    {
+                        "name": "mem_used_percent",
+                        "rename": "MEM_USED",
+                        "unit": "Percent"
+                    }
+                ],
+                "metrics_collection_interval": 60
+            },
+            "disk": {
+                "measurement": [
+                    {
+                        "name": "used_percent",
+                        "rename": "DISK_USED",
+                        "unit": "Percent"
+                    }
+                ],
+                "metrics_collection_interval": 60,
+                "resources": [
+                    "*"
+                ]
+            }
+        }
+    },
+    "logs": {
+        "logs_collected": {
+            "files": {
+                "collect_list": [
+                    {
+                        "file_path": "/var/log/messages",
+                        "log_group_name": "${system_log_group_name}",
+                        "log_stream_name": "{instance_id}-system",
+                        "timestamp_format": "%b %d %H:%M:%S"
+                    },
+                    {
+                        "file_path": "/var/log/secure",
+                        "log_group_name": "${system_log_group_name}",
+                        "log_stream_name": "{instance_id}-secure",
+                        "timestamp_format": "%b %d %H:%M:%S"
+                    }
+                ]
+            }
+        }
+    }
+}

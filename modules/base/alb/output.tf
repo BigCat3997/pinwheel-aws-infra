@@ -1,4 +1,8 @@
-output "alb_arn" {
+output "id" {
+  value = aws_lb.this.id
+}
+
+output "arn" {
   value = aws_lb.this.arn
 }
 
