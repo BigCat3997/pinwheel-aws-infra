@@ -1,0 +1,64 @@
+#!/bin/bash
+set -euxo pipefail
+
+dnf update -y
+dnf install -y nginx
+
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $${TOKEN}" -s http://169.254.169.254/latest/meta-data/instance-id)
+HOSTNAME=$(hostname)
+
+cat >/usr/share/nginx/html/index.html <<EOF
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nginx App</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #0f172a, #1d4ed8);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+      }
+      .card {
+        max-width: 680px;
+        width: calc(100% - 40px);
+        padding: 32px;
+        border-radius: 16px;
+        background: rgba(15, 23, 42, 0.82);
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+      }
+      .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #22c55e;
+        color: #052e16;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+      code {
+        color: #93c5fd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="badge">Normal traffic mode</div>
+      <h1>Nginx on ${instance_name}</h1>
+      <p>This request is currently being served by one of the EC2 instances behind the ALB target group.</p>
+      <p><strong>Instance ID:</strong> <code>$${INSTANCE_ID}</code></p>
+      <p><strong>Hostname:</strong> <code>$${HOSTNAME}</code></p>
+      <p>When maintenance starts, switch <code>maintenance_mode = true</code> and the ALB will route to Lambda + S3 instead.</p>
+    </div>
+  </body>
+</html>
+EOF
+
+systemctl enable nginx
+systemctl restart nginx
