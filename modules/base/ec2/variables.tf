@@ -1,3 +1,13 @@
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
+
+variable "opt_ec2_tags" {
+  type    = map(string)
+  default = {}
+}
+
 variable "name" {
   type        = string
   description = "EC2 instance name"
@@ -133,7 +143,8 @@ variable "role_name" {
   default     = null
 }
 
-variable "tags" {
-  type    = map(string)
-  default = {}
+variable "ebs_volume_name" {
+  description = "Name tag for the external EBS volume (if created)"
+  type        = string
+  default     = null
 }

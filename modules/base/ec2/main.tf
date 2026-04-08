@@ -28,9 +28,12 @@ resource "aws_instance" "this" {
     http_tokens   = var.metadata_http_tokens
   }
 
-  tags = merge(var.tags, {
-    Name = var.name
-  })
+  tags = merge(
+    var.opt_ec2_tags,
+    var.tags, {
+      Name = var.name
+    }
+  )
 }
 
 resource "aws_ebs_volume" "external" {
@@ -44,7 +47,7 @@ resource "aws_ebs_volume" "external" {
   throughput        = var.external_volume_throughput
 
   tags = merge(var.tags, {
-    Name = "${var.name}-ebs"
+    Name = var.ebs_volume_name
   })
 }
 
