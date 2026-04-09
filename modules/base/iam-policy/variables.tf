@@ -12,19 +12,19 @@ variable "path" {
 variable "description" {
   description = "Description of the IAM policy"
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "policy" {
   description = "JSON string containing the policy document. Takes precedence over `policy_file`."
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "policy_file" {
   description = "Path to a file containing the JSON policy document. Used when `policy` is empty."
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "tags" {
