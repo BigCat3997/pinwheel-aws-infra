@@ -1,3 +1,9 @@
+variable "tags" {
+  description = "Common tags applied to the bucket"
+  type        = map(string)
+  default     = {}
+}
+
 variable "create" {
   description = "Whether to create a new S3 bucket (true) or reference an existing bucket by name (false)"
   type        = bool
@@ -39,14 +45,8 @@ variable "bucket_key_enabled" {
   default     = true
 }
 
-variable "block_public_access" {
+variable "enable_public_access" {
   description = "Enable S3 public access block settings"
   type        = bool
   default     = true
-}
-
-variable "tags" {
-  description = "Common tags applied to the bucket"
-  type        = map(string)
-  default     = {}
 }
