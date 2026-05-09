@@ -1,7 +1,3 @@
-locals {
-  assume_policy = var.assume_role_policy != "" ? var.assume_role_policy : (var.assume_role_policy_file != "" ? file(var.assume_role_policy_file) : null)
-}
-
 resource "aws_iam_role" "this" {
   name                  = var.name
   path                  = var.path

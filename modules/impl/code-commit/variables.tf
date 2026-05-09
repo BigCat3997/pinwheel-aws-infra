@@ -1,22 +1,14 @@
-variable "repository_name" {
-  description = "The name for the repository."
-  type        = string
-}
-
-variable "description" {
-  description = "The description of the repository."
-  type        = string
-  default     = null
-}
-
-variable "default_branch" {
-  description = "The name of the default branch."
-  type        = string
-  default     = null
+variable "repositories" {
+  description = "List of CodeCommit repositories with per-repository settings."
+  type = list(object({
+    repository_name = string
+    description     = optional(string, null)
+    default_branch  = optional(string, "main")
+  }))
 }
 
 variable "tags" {
-  description = "A map of tags to assign to the resource."
+  description = "Tags applied to resources"
   type        = map(string)
   default     = {}
 }

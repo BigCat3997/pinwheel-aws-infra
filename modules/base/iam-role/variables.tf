@@ -1,3 +1,9 @@
+variable "tags" {
+  description = "Map of tags to assign to the role"
+  type        = map(string)
+  default     = {}
+}
+
 variable "name" {
   description = "Name of the IAM role"
   type        = string
@@ -18,12 +24,13 @@ variable "description" {
 variable "assume_role_policy" {
   description = "JSON string for the trust policy (assume role policy)"
   type        = string
+  default     = null
 }
 
 variable "assume_role_policy_file" {
   description = "Path to a JSON file containing the assume role policy. Used when `assume_role_policy` is empty."
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "managed_policy_arns" {
@@ -54,10 +61,4 @@ variable "force_detach_policies" {
   description = "Whether to force detaching any policies the role has before destroying it"
   type        = bool
   default     = false
-}
-
-variable "tags" {
-  description = "Map of tags to assign to the role"
-  type        = map(string)
-  default     = {}
 }
