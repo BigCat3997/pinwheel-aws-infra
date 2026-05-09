@@ -10,7 +10,7 @@ resource "aws_route53_zone" "this" {
     for_each = var.private_zone ? [1] : []
     content {
       vpc_id     = var.vpc_id
-      vpc_region = coalesce(var.vpc_region, data.aws_region.current.name)
+      vpc_region = coalesce(var.vpc_region, data.aws_region.current.region)
     }
   }
 

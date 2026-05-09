@@ -1,0 +1,123 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowTerraformManageBucketPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "${current_principal_arn}",
+          "arn:aws:iam::${current_account_id}:root"
+        ]
+      },
+      "Action": [
+        "s3:GetBucketPolicy",
+        "s3:PutBucketPolicy",
+        "s3:DeleteBucketPolicy",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": "${archive_bucket_arn}"
+    },
+    {
+      "Sid": "AllowArchiveBucketReadFromCurrentAccount",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${current_account_id}:root"
+      },
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "${archive_bucket_arn}",
+        "${archive_bucket_arn}/*"
+      ]
+    },
+    {
+      "Sid": "AllowArchiveLambdaListViaVpce",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${archive_lambda_role_arn}"
+      },
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "${archive_bucket_arn}",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceVpce": "${archive_vpce_id}"
+        }
+      }
+    },
+    {
+      "Sid": "AllowArchiveLambdaWriteViaVpce",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${archive_lambda_role_arn}"
+      },
+      "Action": [
+        "s3:PutObject",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": "${archive_bucket_arn}/${archive_prefix}/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceVpce": "${archive_vpce_id}"
+        }
+      }
+    },
+    {
+      "Sid": "DenyArchiveRequestsNotFromVpce",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": [
+        "s3:ListBucket",
+        "s3:PutObject",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "${archive_bucket_arn}",
+        "${archive_bucket_arn}/${archive_prefix}/*"
+      ],
+      "Condition": {
+        "StringNotEquals": {
+          "aws:SourceVpce": "${archive_vpce_id}"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "${archive_lambda_role_arn}",
+            "arn:aws:iam::${current_account_id}:root",
+            "arn:aws:iam::${current_account_id}:user/*",
+            "arn:aws:iam::${current_account_id}:role/*",
+            "arn:aws:sts::${current_account_id}:assumed-role/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyArchiveAccessFromOtherPrincipals",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": [
+        "s3:ListBucket",
+        "s3:PutObject",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "${archive_bucket_arn}",
+        "${archive_bucket_arn}/${archive_prefix}/*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "${archive_lambda_role_arn}",
+            "arn:aws:iam::${current_account_id}:root",
+            "arn:aws:iam::${current_account_id}:user/*",
+            "arn:aws:iam::${current_account_id}:role/*",
+            "arn:aws:sts::${current_account_id}:assumed-role/*"
+          ]
+        }
+      }
+    }
+  ]
+}
