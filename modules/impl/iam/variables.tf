@@ -1,3 +1,15 @@
+variable "env" {
+  description = "Environment name (e.g., dev, prd) exposed to CodeBuild as environment variables."
+  type        = string
+  default     = "dev"
+}
+
+variable "tags" {
+  description = "A map of tags to assign to the resource."
+  type        = map(string)
+  default     = {}
+}
+
 variable "name" {
   description = "The user's name."
   type        = string
@@ -19,12 +31,6 @@ variable "force_destroy" {
   description = "When true, destroy even if user has non-Terraform-managed access keys, login profile, or MFA devices."
   type        = bool
   default     = false
-}
-
-variable "tags" {
-  description = "A map of tags to assign to the resource."
-  type        = map(string)
-  default     = {}
 }
 
 variable "create_user" {
