@@ -43,3 +43,10 @@ resource "aws_s3_bucket_public_access_block" "this" {
   block_public_policy     = true
   restrict_public_buckets = true
 }
+
+resource "aws_s3_bucket_policy" "this" {
+  count = var.enable_bucket_policy ? 1 : 0
+
+  bucket = local.s3_id
+  policy = local.policy
+}

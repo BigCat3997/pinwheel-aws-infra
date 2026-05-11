@@ -50,3 +50,21 @@ variable "enable_public_access" {
   type        = bool
   default     = true
 }
+
+variable "enable_bucket_policy" {
+  description = "Enable S3 bucket policy"
+  type        = bool
+  default     = false
+}
+
+variable "policy" {
+  description = "JSON string containing the bucket policy document. Takes precedence over `bucket_policy_file`."
+  type        = string
+  default     = null
+}
+
+variable "policy_file" {
+  description = "Path to a file containing the bucket policy JSON document. Used when `bucket_policy` is empty."
+  type        = string
+  default     = null
+}
