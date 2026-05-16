@@ -1,0 +1,134 @@
+#!/bin/bash
+set -euxo pipefail
+
+# ----------------------------------------------------------------
+# OpenVPN server bootstrap (Ubuntu 24.04)
+# Installs OpenVPN + Easy-RSA, creates a server config, generates
+# a client .ovpn profile written to /root/client.ovpn
+# ----------------------------------------------------------------
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update -y
+apt-get install -y openvpn easy-rsa iptables-persistent
+
+# ---------- PKI setup ----------
+PKI_DIR=/etc/openvpn/easy-rsa
+
+make-cadir "$PKI_DIR"
+cd "$PKI_DIR"
+
+cat > vars <<EOF
+set_var EASYRSA_BATCH         "yes"
+set_var EASYRSA_REQ_COUNTRY   "US"
+set_var EASYRSA_REQ_PROVINCE  "CA"
+set_var EASYRSA_REQ_CITY      "San Francisco"
+set_var EASYRSA_REQ_ORG       "Pinwheel"
+set_var EASYRSA_REQ_EMAIL     "admin@example.com"
+set_var EASYRSA_REQ_OU        "DevOps"
+set_var EASYRSA_CA_EXPIRE     3650
+set_var EASYRSA_CERT_EXPIRE   825
+EOF
+
+./easyrsa init-pki
+./easyrsa build-ca nopass
+./easyrsa gen-req server nopass
+./easyrsa sign-req server server
+./easyrsa gen-dh
+openvpn --genkey secret pki/ta.key
+./easyrsa gen-req client1 nopass
+./easyrsa sign-req client client1
+
+# ---------- Copy certs to /etc/openvpn ----------
+cp pki/ca.crt           /etc/openvpn/
+cp pki/issued/server.crt /etc/openvpn/
+cp pki/private/server.key /etc/openvpn/
+cp pki/dh.pem           /etc/openvpn/
+cp pki/ta.key           /etc/openvpn/
+
+# ---------- Server config ----------
+cat > /etc/openvpn/server.conf <<EOF
+port ${vpn_server_port}
+proto tcp
+dev tun
+
+ca   ca.crt
+cert server.crt
+key  server.key
+dh   dh.pem
+
+tls-auth ta.key 0
+cipher AES-256-GCM
+auth SHA256
+
+server ${vpn_network} ${vpn_network_mask}
+
+push "redirect-gateway def1 bypass-dhcp"
+push "dhcp-option DNS 1.1.1.1"
+push "dhcp-option DNS 8.8.8.8"
+
+keepalive 10 120
+user nobody
+group nogroup
+persist-key
+persist-tun
+
+status  /var/log/openvpn-status.log
+log     /var/log/openvpn.log
+verb 3
+EOF
+
+# ---------- IP forwarding + NAT ----------
+echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-openvpn.conf
+sysctl -p /etc/sysctl.d/99-openvpn.conf
+
+PRIMARY_IF=$(ip route show default | awk '/default/ {print $5; exit}')
+iptables -t nat -A POSTROUTING -s ${vpn_network}/${vpn_network_mask} -o "$PRIMARY_IF" -j MASQUERADE
+netfilter-persistent save
+
+# ---------- Enable & start OpenVPN ----------
+systemctl enable openvpn@server
+systemctl start  openvpn@server
+
+# ---------- Build client .ovpn file ----------
+CA_CERT=$(awk '/-----BEGIN CERTIFICATE-----/{p=1} p; /-----END CERTIFICATE-----/{p=0}' "$PKI_DIR/pki/ca.crt")
+CLIENT_CERT=$(awk '/-----BEGIN CERTIFICATE-----/{p=1} p; /-----END CERTIFICATE-----/{p=0}' "$PKI_DIR/pki/issued/client1.crt")
+CLIENT_KEY=$(awk '/-----BEGIN PRIVATE KEY-----/{p=1} p; /-----END PRIVATE KEY-----/{p=0}' "$PKI_DIR/pki/private/client1.key")
+TA_KEY=$(awk '/-----BEGIN OpenVPN Static key V1-----/{p=1} p; /-----END OpenVPN Static key V1-----/{p=0}' "$PKI_DIR/pki/ta.key")
+
+REMOTE_HOST="${vpn_remote_host}"
+if [ -z "$REMOTE_HOST" ]; then
+	echo "ERROR: vpn_remote_host is empty; cannot build client.ovpn" | tee -a /var/log/openvpn-bootstrap.log
+	exit 1
+fi
+
+cat > /root/client.ovpn <<OVPN
+client
+dev tun
+proto tcp
+remote $REMOTE_HOST ${vpn_server_port}
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+cipher AES-256-GCM
+auth SHA256
+key-direction 1
+verb 3
+
+<ca>
+$CA_CERT
+</ca>
+<cert>
+$CLIENT_CERT
+</cert>
+<key>
+$CLIENT_KEY
+</key>
+<tls-auth>
+$TA_KEY
+</tls-auth>
+OVPN
+
+chmod 600 /root/client.ovpn
+echo "OpenVPN setup complete. Download /root/client.ovpn to your phone." >> /var/log/openvpn-bootstrap.log
