@@ -82,3 +82,9 @@ variable "compression_type" {
   type        = string
   default     = "zip"
 }
+
+variable "create_function_url" {
+  description = "Whether to create a public Lambda Function URL (authorization type NONE)"
+  type        = bool
+  default     = false
+}
