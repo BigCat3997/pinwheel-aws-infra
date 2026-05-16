@@ -68,3 +68,26 @@ variable "policy_file" {
   type        = string
   default     = null
 }
+
+variable "enable_website_configuration" {
+  description = "Enable S3 static website hosting configuration"
+  type        = bool
+  default     = false
+}
+
+variable "website_index_document" {
+  description = "Index document suffix for website hosting (e.g. index.html). Required if enable_website_configuration is true."
+  type        = string
+  default     = null
+}
+
+variable "s3_objects" {
+  description = "Map of S3 objects to upload to the bucket. Key is the object key, value is object config with: source, content_type (optional), cache_control (optional), content_disposition (optional)"
+  type = map(object({
+    source              = string
+    content_type        = optional(string)
+    cache_control       = optional(string)
+    content_disposition = optional(string)
+  }))
+  default = {}
+}
