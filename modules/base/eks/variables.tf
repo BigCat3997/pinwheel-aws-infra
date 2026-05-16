@@ -56,13 +56,13 @@ variable "enabled_cluster_log_types" {
 variable "node_groups" {
   description = "A list of EKS managed node group configurations."
   type = list(object({
-    name           = string
-    instance_types = list(string)
-    capacity_type  = optional(string, "ON_DEMAND")
-    disk_size      = optional(number, 50)
-    desired_size   = number
-    min_size       = number
-    max_size       = number
+    name            = string
+    instance_types  = list(string)
+    capacity_type   = optional(string, "ON_DEMAND")
+    disk_size       = optional(number, 50)
+    desired_size    = number
+    min_size        = number
+    max_size        = number
     max_unavailable = optional(number, 1)
   }))
   default = []
