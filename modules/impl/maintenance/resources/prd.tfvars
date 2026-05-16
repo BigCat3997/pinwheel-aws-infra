@@ -10,7 +10,7 @@ tags = {
 
 aws_region             = "us-east-1"
 name_prefix            = "bc-rookie-maint"
-maintenance_mode       = false
+maintenance_mode       = true
 instance_type          = "t3.micro"
 key_pair_name          = null
 allowed_ssh_cidr       = "0.0.0.0/0"

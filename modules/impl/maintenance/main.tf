@@ -237,7 +237,7 @@ module "local_maintenance_s3" {
   enable_bucket_policy         = true
   enable_website_configuration = true
   website_index_document       = var.maintenance_object_key
-  policy = templatefile("${path.module}/resources/iam/maintenance-bucket-public-read-policy.json.tftpl", {
+  policy = templatefile("${path.module}/resources/iam/b3-s3-permitonlyvpce-policy.json.tftpl", {
     maintenance_bucket_arn = local.maintenance_bucket_arn
     lambda_role_arn        = module.local_lambda_iam_role.role_arn
     s3_interface_vpce_id   = module.local_s3_interface_vpc_endpoint.id
@@ -264,7 +264,7 @@ module "local_lambda_iam_role" {
     "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   ]
   inline_policies = {
-    "${var.name_prefix}-lambda-s3-read" = templatefile("${path.module}/resources/iam/lambda-s3-read-policy.json.tftpl", {
+    "bc-s3-maintenance-read-policy" = templatefile("${path.module}/resources/iam/bc-s3-readmaintenanceweb-policy.json.tftpl", {
       maintenance_bucket_arn = local.maintenance_bucket_arn
     })
   }
