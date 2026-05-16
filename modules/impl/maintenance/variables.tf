@@ -86,3 +86,51 @@ variable "force_destroy_bucket" {
   type        = bool
   default     = true
 }
+
+variable "s3_interface_service_name" {
+  description = "Service name for the S3 VPC interface endpoint"
+  type        = string
+  default     = null
+}
+
+variable "s3_interface_vpc_endpoint_type" {
+  description = "VPC endpoint type for the S3 endpoint"
+  type        = string
+  default     = "Interface"
+}
+
+variable "s3_interface_auto_accept" {
+  description = "Whether endpoint requests are automatically accepted"
+  type        = bool
+  default     = null
+}
+
+variable "s3_interface_policy" {
+  description = "Optional endpoint policy JSON"
+  type        = string
+  default     = null
+}
+
+variable "s3_interface_route_table_ids" {
+  description = "Optional route table IDs for gateway endpoint mode"
+  type        = list(string)
+  default     = null
+}
+
+variable "s3_interface_private_dns_enabled" {
+  description = "Enable private DNS for the interface endpoint"
+  type        = bool
+  default     = true
+}
+
+variable "s3_interface_ip_address_type" {
+  description = "Endpoint IP address type"
+  type        = string
+  default     = null
+}
+
+variable "s3_interface_private_dns_only_for_inbound_resolver_endpoint" {
+  description = "Private DNS only for inbound resolver endpoint setting"
+  type        = bool
+  default     = false
+}
