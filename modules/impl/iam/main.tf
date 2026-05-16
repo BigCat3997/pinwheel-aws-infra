@@ -2,14 +2,12 @@ module "local_iam_policy" {
   source = "../../base/iam-policy"
   count  = var.create_policy ? 1 : 0
 
-  name        = var.name
-  path        = var.path
-  policy      = var.policy_json
-  policy_file = var.policy_json_file
+  name   = var.name
+  path   = var.path
+  policy = file("${path.module}/resources/iam/bc-policy-admin-prd.json")
 
   tags = var.tags
 }
-
 
 module "local_user_iam" {
   source = "../../base/iam"

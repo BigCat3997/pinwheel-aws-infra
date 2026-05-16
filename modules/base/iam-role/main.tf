@@ -6,14 +6,8 @@ resource "aws_iam_role" "this" {
   permissions_boundary  = var.permissions_boundary
   max_session_duration  = var.max_session_duration
   force_detach_policies = var.force_detach_policies
-  tags                  = var.tags
-}
 
-resource "aws_iam_role_policy_attachment" "managed" {
-  for_each = { for idx, arn in var.managed_policy_arns : tostring(idx) => arn }
-
-  role       = aws_iam_role.this.name
-  policy_arn = each.value
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy" "inline" {
@@ -23,3 +17,11 @@ resource "aws_iam_role_policy" "inline" {
   role   = aws_iam_role.this.id
   policy = each.value
 }
+
+resource "aws_iam_role_policy_attachment" "managed" {
+  for_each = { for idx, arn in var.managed_policy_arns : tostring(idx) => arn }
+
+  role       = aws_iam_role.this.name
+  policy_arn = each.value
+}
+
