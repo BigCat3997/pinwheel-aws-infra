@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowLambdaReadThroughS3InterfaceVpce",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${lambda_role_arn}"
+      },
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "${maintenance_bucket_arn}/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:sourceVpce": "${s3_interface_vpce_id}"
+        }
+      }
+    },
+    {
+      "Sid": "DenyLambdaReadOutsideS3InterfaceVpce",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "${lambda_role_arn}"
+      },
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "${maintenance_bucket_arn}/*"
+      ],
+      "Condition": {
+        "StringNotEquals": {
+          "aws:sourceVpce": "${s3_interface_vpce_id}"
+        }
+      }
+    }
+  ]
+}
