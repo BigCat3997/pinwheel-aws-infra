@@ -1,3 +1,9 @@
+variable "tags" {
+  description = "Tags applied to resources"
+  type        = map(string)
+  default     = {}
+}
+
 variable "project_name" {
   description = "CodeBuild project name"
   type        = string
@@ -68,8 +74,38 @@ variable "service_role_arn" {
   default     = null
 }
 
-variable "tags" {
-  description = "Tags applied to resources"
-  type        = map(string)
-  default     = {}
+variable "environment_variables" {
+  description = "Environment variables to inject into CodeBuild container."
+  type = list(object({
+    name  = string
+    value = string
+    type  = optional(string, "PLAINTEXT")
+  }))
+  default = []
+}
+
+variable "enable_cloudwatch_logs" {
+  type    = bool
+  default = true
+}
+
+variable "enable_s3_logs" {
+  type    = bool
+  default = false
+}
+
+variable "log_group_name" {
+  type    = string
+  default = null
+}
+
+variable "log_stream_name" {
+  type    = string
+  default = null
+
+}
+
+variable "s3_log_location" {
+  type    = string
+  default = ""
 }

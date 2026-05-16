@@ -18,14 +18,19 @@ output "fingerprint" {
   value       = try(aws_key_pair.this[0].fingerprint, null)
 }
 
+output "public_key" {
+  description = "The actual public key registered in AWS"
+  value       = try(aws_key_pair.this[0].public_key, null)
+}
+
 output "private_key_pem" {
-  description = "The private key in PEM format"
-  value       = tls_private_key.key.private_key_pem
+  description = "The generated private key in PEM format (null when external public key is provided)"
+  value       = try(tls_private_key.key[0].private_key_pem, null)
   sensitive   = true
 }
 
 output "public_key_openssh" {
-  description = "The public key in OpenSSH format"
-  value       = tls_private_key.key.public_key_openssh
+  description = "The generated public key in OpenSSH format (null when external public key is provided)"
+  value       = try(tls_private_key.key[0].public_key_openssh, null)
   sensitive   = true
 }
