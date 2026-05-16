@@ -15,6 +15,7 @@ resource "aws_instance" "this" {
   iam_instance_profile        = try(aws_iam_instance_profile.this[0].name, null)
   vpc_security_group_ids      = var.security_group_ids
   user_data                   = var.user_data
+  user_data_replace_on_change = var.user_data_replace_on_change
 
   root_block_device {
     volume_size           = var.volume_size
