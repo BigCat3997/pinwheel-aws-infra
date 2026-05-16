@@ -50,3 +50,25 @@ resource "aws_s3_bucket_policy" "this" {
   bucket = local.s3_id
   policy = local.policy
 }
+
+resource "aws_s3_bucket_website_configuration" "this" {
+  count = var.enable_website_configuration ? 1 : 0
+
+  bucket = local.s3_id
+
+  index_document {
+    suffix = var.website_index_document
+  }
+}
+
+resource "aws_s3_object" "objects" {
+  for_each = var.s3_objects
+
+  bucket              = local.s3_id
+  key                 = each.key
+  source              = each.value.source
+  content_type        = each.value.content_type
+  cache_control       = each.value.cache_control
+  content_disposition = each.value.content_disposition
+  etag                = filemd5(each.value.source)
+}
