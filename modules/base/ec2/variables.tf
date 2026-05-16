@@ -129,6 +129,13 @@ variable "metadata_http_tokens" {
 variable "key_name" {
   type        = string
   description = "Name of the EC2 key pair"
+  default     = null
+}
+
+variable "user_data_replace_on_change" {
+  type        = bool
+  description = "Whether changes to user_data force instance replacement"
+  default     = false
 }
 
 variable "instance_profile_name" {
