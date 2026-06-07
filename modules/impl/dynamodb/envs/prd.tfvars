@@ -5,7 +5,7 @@ tags = {
 }
 
 table = {
-  name         = "terraformlocks-0"
+  name         = "terraform-locks"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
 
@@ -22,4 +22,4 @@ table = {
   }
 }
 
-s3_tf_state_bucket_name = "bc-s3-terraformstate-prd-0"
+s3_tf_state_bucket_name = "bc-s3-terraformstate-prd-1"
