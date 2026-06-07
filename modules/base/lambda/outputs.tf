@@ -15,12 +15,12 @@ output "arn" {
 
 output "role_name" {
   description = "IAM role name used by the Lambda function"
-  value       = var.create_role ? aws_iam_role.lambda[0].name : data.aws_iam_role.lambda[0].name
+  value       = var.create_role ? aws_iam_role.lambda[0].name : (length(data.aws_iam_role.lambda) > 0 ? data.aws_iam_role.lambda[0].name : null)
 }
 
 output "role_arn" {
   description = "ARN of the IAM role used by the Lambda function"
-  value       = var.create_role ? aws_iam_role.lambda[0].arn : data.aws_iam_role.lambda[0].arn
+  value       = var.create_role ? aws_iam_role.lambda[0].arn : (length(data.aws_iam_role.lambda) > 0 ? data.aws_iam_role.lambda[0].arn : var.role_arn)
 }
 
 output "function_url" {

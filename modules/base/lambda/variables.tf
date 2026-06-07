@@ -50,8 +50,15 @@ variable "security_group_ids" {
 }
 
 variable "source_file" {
-  description = "Path to the Lambda function source code"
+  description = "Path to a single Lambda function source file. Mutually exclusive with source_dir."
   type        = string
+  default     = null
+}
+
+variable "source_dir" {
+  description = "Path to a directory of Lambda function source files. Mutually exclusive with source_file."
+  type        = string
+  default     = null
 }
 
 variable "output_path" {
