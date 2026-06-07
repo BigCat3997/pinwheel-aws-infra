@@ -4,18 +4,18 @@ tags = {
   Environment = "Shared"
 }
 
-terraform_locks_table_name         = "bc-ddbt-terraformstate-prd-0"
-terraform_locks_table_billing_mode = "PAY_PER_REQUEST"
-terraform_locks_table_hash_key     = "LockID"
-terraform_locks_table_attributes = [
+tf_locks_table_name         = "bc-ddbt-terraformstate-prd-1"
+tf_locks_table_billing_mode = "PAY_PER_REQUEST"
+tf_locks_table_hash_key     = "LockID"
+tf_locks_table_attributes = [
   {
     name = "LockID"
     type = "S"
   }
 ]
-terraform_locks_table_tags = {
+tf_locks_table_tags = {
   Component = "DynamoDB"
   Purpose   = "TerraformStateLock"
 }
 
-s3_tf_state_bucket_name = "bc-s3-terraformstate-prd-2"
+tf_state_s3_bucket_name = "bc-s3-terraformstate-prd-3"
