@@ -18,4 +18,5 @@ tf_locks_table_tags = {
   Purpose   = "TerraformStateLock"
 }
 
-tf_state_s3_bucket_name = "bc-s3-terraformstate-prd-3"
+tf_state_s3_bucket_name          = "bc-s3-terraformstate-prd-3"
+tf_state_s3_enable_public_access = true
