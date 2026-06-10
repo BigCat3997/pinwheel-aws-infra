@@ -61,6 +61,42 @@ resource "aws_s3_bucket_website_configuration" "this" {
   }
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "this" {
+  count = var.lifecycle_configuration == null ? 0 : 1
+
+  bucket = local.s3_id
+
+  rule {
+    id     = try(var.lifecycle_configuration.id, "default")
+    status = "Enabled"
+
+    filter {
+      prefix = try(var.lifecycle_configuration.prefix, "")
+    }
+
+    dynamic "expiration" {
+      for_each = try(var.lifecycle_configuration.expiration_days, null) == null ? [] : [1]
+      content {
+        days = var.lifecycle_configuration.expiration_days
+      }
+    }
+
+    dynamic "noncurrent_version_expiration" {
+      for_each = try(var.lifecycle_configuration.noncurrent_version_expiration_days, null) == null ? [] : [1]
+      content {
+        noncurrent_days = var.lifecycle_configuration.noncurrent_version_expiration_days
+      }
+    }
+
+    dynamic "abort_incomplete_multipart_upload" {
+      for_each = try(var.lifecycle_configuration.abort_incomplete_multipart_upload_days, null) == null ? [] : [1]
+      content {
+        days_after_initiation = var.lifecycle_configuration.abort_incomplete_multipart_upload_days
+      }
+    }
+  }
+}
+
 resource "aws_s3_object" "objects" {
   for_each = var.s3_objects
 
