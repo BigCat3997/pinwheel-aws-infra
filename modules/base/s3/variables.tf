@@ -91,3 +91,24 @@ variable "s3_objects" {
   }))
   default = {}
 }
+
+variable "lifecycle_configuration" {
+  description = "Simple lifecycle configuration for common bucket cleanup use cases. Set to null to disable lifecycle configuration."
+  type = object({
+    id                                     = optional(string, "default")
+    prefix                                 = optional(string, "")
+    expiration_days                        = optional(number)
+    noncurrent_version_expiration_days     = optional(number)
+    abort_incomplete_multipart_upload_days = optional(number)
+  })
+  default = null
+
+  validation {
+    condition = var.lifecycle_configuration == null || (
+      try(var.lifecycle_configuration.expiration_days, null) != null ||
+      try(var.lifecycle_configuration.noncurrent_version_expiration_days, null) != null ||
+      try(var.lifecycle_configuration.abort_incomplete_multipart_upload_days, null) != null
+    )
+    error_message = "Set at least one of expiration_days, noncurrent_version_expiration_days, or abort_incomplete_multipart_upload_days when lifecycle_configuration is provided."
+  }
+}

@@ -26,11 +26,12 @@ module "local_tf_locks_dynamodb_table" {
 module "local_tf_state_s3" {
   source = "../../base/s3"
 
-  bucket_name          = var.tf_state_s3_bucket_name
-  force_destroy        = var.tf_state_s3_force_destroy
-  enable_versioning    = var.tf_state_s3_enable_versioning
-  enable_encryption    = var.tf_state_s3_enable_encryption
-  enable_public_access = var.tf_state_s3_enable_public_access
+  bucket_name             = var.tf_state_s3_bucket_name
+  force_destroy           = var.tf_state_s3_force_destroy
+  enable_versioning       = var.tf_state_s3_enable_versioning
+  enable_encryption       = var.tf_state_s3_enable_encryption
+  enable_public_access    = var.tf_state_s3_enable_public_access
+  lifecycle_configuration = var.tf_state_s3_lifecycle_configuration
 
   tags = var.tags
 }

@@ -161,6 +161,27 @@ variable "tf_state_s3_enable_public_access" {
   default     = false
 }
 
+variable "tf_state_s3_lifecycle_configuration" {
+  description = "Simple lifecycle configuration for the Terraform state S3 bucket"
+  type = object({
+    id                                     = optional(string, "default")
+    prefix                                 = optional(string, "")
+    expiration_days                        = optional(number)
+    noncurrent_version_expiration_days     = optional(number)
+    abort_incomplete_multipart_upload_days = optional(number)
+  })
+  default = null
+
+  validation {
+    condition = var.tf_state_s3_lifecycle_configuration == null || (
+      try(var.tf_state_s3_lifecycle_configuration.expiration_days, null) != null ||
+      try(var.tf_state_s3_lifecycle_configuration.noncurrent_version_expiration_days, null) != null ||
+      try(var.tf_state_s3_lifecycle_configuration.abort_incomplete_multipart_upload_days, null) != null
+    )
+    error_message = "Set at least one lifecycle day value when tf_state_s3_lifecycle_configuration is provided."
+  }
+}
+
 variable "tags" {
   description = "Common tags applied to all DynamoDB tables"
   type        = map(string)
