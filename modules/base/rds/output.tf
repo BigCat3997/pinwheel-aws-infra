@@ -1,26 +1,36 @@
 output "id" {
   description = "RDS instance ID"
-  value       = aws_db_instance.this.id
+  value       = var.manage_master_user_password ? aws_db_instance.this_managed[0].id : aws_db_instance.this[0].id
 }
 
 output "arn" {
   description = "RDS instance ARN"
-  value       = aws_db_instance.this.arn
+  value       = var.manage_master_user_password ? aws_db_instance.this_managed[0].arn : aws_db_instance.this[0].arn
 }
 
 output "endpoint" {
   description = "RDS endpoint"
-  value       = aws_db_instance.this.address
+  value       = var.manage_master_user_password ? aws_db_instance.this_managed[0].address : aws_db_instance.this[0].address
+}
+
+output "availability_zone" {
+  description = "RDS instance availability zone"
+  value       = var.manage_master_user_password ? aws_db_instance.this_managed[0].availability_zone : aws_db_instance.this[0].availability_zone
 }
 
 output "port" {
   description = "RDS endpoint port"
-  value       = aws_db_instance.this.port
+  value       = var.manage_master_user_password ? aws_db_instance.this_managed[0].port : aws_db_instance.this[0].port
 }
 
 output "resource_id" {
   description = "RDS resource ID"
-  value       = aws_db_instance.this.resource_id
+  value       = var.manage_master_user_password ? aws_db_instance.this_managed[0].resource_id : aws_db_instance.this[0].resource_id
+}
+
+output "db_subnet_group_name" {
+  description = "DB subnet group name used by the instance"
+  value       = local.effective_db_subnet_group_name
 }
 
 output "primary_database_name" {
