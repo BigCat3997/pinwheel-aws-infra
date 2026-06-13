@@ -1,3 +1,9 @@
+variable "common_tags" {
+  description = "Common tags applied to all resources"
+  type        = map(string)
+  default     = {}
+}
+
 variable "tf_locks_table_name" {
   description = "DynamoDB table name"
   type        = string
@@ -180,10 +186,4 @@ variable "tf_state_s3_lifecycle_configuration" {
     )
     error_message = "Set at least one lifecycle day value when tf_state_s3_lifecycle_configuration is provided."
   }
-}
-
-variable "tags" {
-  description = "Common tags applied to all DynamoDB tables"
-  type        = map(string)
-  default     = {}
 }
