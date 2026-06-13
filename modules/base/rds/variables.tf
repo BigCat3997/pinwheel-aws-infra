@@ -3,6 +3,12 @@ variable "identifier" {
   type        = string
 }
 
+variable "engine" {
+  description = "Database engine"
+  type        = string
+  default     = "mysql"
+}
+
 variable "engine_version" {
   description = "MySQL engine version"
   type        = string
@@ -63,6 +69,13 @@ variable "master_password" {
   description = "Master password for MySQL"
   type        = string
   sensitive   = true
+  default     = null
+}
+
+variable "manage_master_user_password" {
+  description = "Whether to let RDS manage master user password in Secrets Manager"
+  type        = bool
+  default     = false
 }
 
 variable "port" {
@@ -74,6 +87,25 @@ variable "port" {
 variable "db_subnet_group_name" {
   description = "DB subnet group name"
   type        = string
+  default     = null
+}
+
+variable "create_db_subnet_group" {
+  description = "Whether to create an RDS DB subnet group"
+  type        = bool
+  default     = false
+}
+
+variable "db_subnet_group_subnet_ids" {
+  description = "Subnet IDs for created DB subnet group"
+  type        = list(string)
+  default     = []
+}
+
+variable "db_subnet_group_tags" {
+  description = "Tags for created DB subnet group"
+  type        = map(string)
+  default     = {}
 }
 
 variable "vpc_security_group_ids" {
