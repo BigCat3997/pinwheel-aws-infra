@@ -3,7 +3,18 @@ variable "tags" {
   default = {}
 }
 
-variable "opt_ec2_tags" {
+variable "ec2_tags" {
+  type    = map(string)
+  default = {}
+}
+
+variable "volume_tags" {
+  type    = map(string)
+  default = {}
+}
+
+
+variable "ebs_volume_tags" {
   type    = map(string)
   default = {}
 }
@@ -52,6 +63,12 @@ variable "ssh_user" {
 
 variable "user_data" {
   type = string
+}
+
+variable "volume_name" {
+  type        = string
+  description = "EC2 instance volume name"
+  default     = null
 }
 
 variable "volume_size" {

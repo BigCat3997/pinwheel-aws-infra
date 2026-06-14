@@ -22,6 +22,11 @@ resource "aws_instance" "this" {
     volume_type           = var.volume_type
     encrypted             = var.volume_encrypted
     delete_on_termination = var.volume_delete_on_termination
+
+    tags = merge(
+      var.tags,
+      var.volume_tags
+    )
   }
 
   metadata_options {
@@ -30,7 +35,7 @@ resource "aws_instance" "this" {
   }
 
   tags = merge(
-    var.opt_ec2_tags,
+    var.ec2_tags,
     var.tags, {
       Name = var.name
     }
@@ -47,9 +52,7 @@ resource "aws_ebs_volume" "external" {
   iops              = var.external_volume_iops
   throughput        = var.external_volume_throughput
 
-  tags = merge(var.tags, {
-    Name = var.ebs_volume_name
-  })
+  tags = merge(var.tags, var.ebs_volume_tags)
 }
 
 resource "aws_volume_attachment" "external" {
