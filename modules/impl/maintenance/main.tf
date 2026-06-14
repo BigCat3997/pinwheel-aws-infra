@@ -188,7 +188,7 @@ module "local_web_ec2" {
   volume_size                 = 50
   volume_type                 = "gp3"
   tags                        = local.common_tags
-  opt_ec2_tags = {
+  ec2_tags = {
     Role = "nginx"
   }
 }
