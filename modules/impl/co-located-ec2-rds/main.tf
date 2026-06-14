@@ -89,7 +89,7 @@ module "local_primary_ec2" {
   name                = var.ec2_primary_name
   ami_id              = var.ec2_ami_id
   instance_type       = var.ec2_instance_type
-  subnet_id           = module.local_subnet.private_subnet_ids[var.ec2_primary_subnet_name]
+  subnet_id           = module.local_subnet.private_subnets[var.ec2_primary_subnet_name]
   private_ip          = local.primary_private_ip
   security_group_ids  = [module.local_ec2_sg.id]
   associate_public_ip = false
@@ -113,7 +113,7 @@ module "local_standby_ec2" {
   name                = var.ec2_standby_name
   ami_id              = var.ec2_ami_id
   instance_type       = var.ec2_instance_type
-  subnet_id           = module.local_subnet.private_subnet_ids[var.ec2_standby_subnet_name]
+  subnet_id           = module.local_subnet.private_subnets[var.ec2_standby_subnet_name]
   private_ip          = local.standby_private_ip
   security_group_ids  = [module.local_ec2_sg.id]
   associate_public_ip = false
