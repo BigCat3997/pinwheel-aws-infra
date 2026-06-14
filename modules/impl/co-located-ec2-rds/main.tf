@@ -251,7 +251,7 @@ module "local_rds_mysql" {
   port                        = var.rds_mysql_port
 
   create_db_subnet_group     = true
-  db_subnet_group_subnet_ids = values(module.local_subnet.private_subnet_ids)
+  db_subnet_group_subnet_ids = module.local_subnet.private_subnet_ids
   db_subnet_group_tags       = var.common_tags
 
   vpc_security_group_ids = [module.local_rds_sg.id]
