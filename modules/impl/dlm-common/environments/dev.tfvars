@@ -1,4 +1,4 @@
-tags = {
+common_tags = {
   Environment = "dev"
   Project     = "dlm-common"
   Name        = "bc-dlm-vol_bastion_ec2_root_dev_0-dev-0"
