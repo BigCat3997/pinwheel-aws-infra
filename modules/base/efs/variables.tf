@@ -74,3 +74,35 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "access_points" {
+  description = "List of EFS access points to create"
+  type = list(object({
+    name        = string
+    path        = string
+    owner_uid   = number
+    owner_gid   = number
+    permissions = string
+    posix_uid   = number
+    posix_gid   = number
+  }))
+  default = []
+}
+
+variable "enable_file_system_policy" {
+  description = "Whether to attach an EFS file system policy"
+  type        = bool
+  default     = false
+}
+
+variable "allowed_principal_arns" {
+  description = "IAM principal ARNs allowed to mount EFS when file system policy is enabled"
+  type        = list(string)
+  default     = []
+}
+
+variable "allow_client_root_access" {
+  description = "Whether to allow elasticfilesystem:ClientRootAccess in the file system policy"
+  type        = bool
+  default     = false
+}
