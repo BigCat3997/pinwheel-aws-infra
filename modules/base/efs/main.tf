@@ -67,31 +67,5 @@ resource "aws_efs_file_system_policy" "this" {
   count = var.create && var.enable_file_system_policy ? 1 : 0
 
   file_system_id = aws_efs_file_system.this[0].id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "AllowMountFromApprovedPrincipals"
-        Effect = "Allow"
-        Principal = {
-          AWS = var.allowed_principal_arns
-        }
-        Action = var.allow_client_root_access ? [
-          "elasticfilesystem:ClientMount",
-          "elasticfilesystem:ClientWrite",
-          "elasticfilesystem:ClientRootAccess"
-          ] : [
-          "elasticfilesystem:ClientMount",
-          "elasticfilesystem:ClientWrite"
-        ]
-        Resource = aws_efs_file_system.this[0].arn
-        Condition = {
-          Bool = {
-            "elasticfilesystem:AccessedViaMountTarget" = "true"
-          }
-        }
-      }
-    ]
-  })
+  policy         = var.efs_policy
 }
