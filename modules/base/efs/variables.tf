@@ -106,3 +106,9 @@ variable "allow_client_root_access" {
   type        = bool
   default     = false
 }
+
+variable "efs_policy" {
+  description = "Custom EFS file system policy JSON. If not provided and enable_file_system_policy is true, a default restrictive policy will be generated allowing mount/write only from allowed_principal_arns."
+  type        = string
+  default     = null
+}
