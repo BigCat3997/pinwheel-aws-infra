@@ -1,5 +1,3 @@
-# ── VPC ────────────────────────────────────────────────────────────────────────
-
 module "local_vpc" {
   source     = "../../base/vpc"
   create     = var.create_vpc
@@ -96,8 +94,6 @@ module "local_route_table_association" {
   depends_on = [module.local_subnet, module.local_route_table]
 }
 
-# ── Key pair ───────────────────────────────────────────────────────────────────
-
 module "local_key_pair" {
   source = "../../base/key-pair"
 
@@ -106,8 +102,6 @@ module "local_key_pair" {
   public_key = data.aws_secretsmanager_secret_version.ec2_public_key.secret_string
   tags       = var.common_tags
 }
-
-# ── Security groups ────────────────────────────────────────────────────────────
 
 module "local_ec2_sg" {
   source = "../../base/sg"
@@ -173,7 +167,6 @@ module "local_efs_sg" {
   name   = var.sg_efs_name
   vpc_id = module.local_vpc.id
 
-  # Allow NFS (TCP 2049) only from the EC2 security group
   security_rules = [
     {
       from_port         = 2049
@@ -202,7 +195,7 @@ module "local_efs_sg" {
 module "local_ec2_node1_role" {
   source = "../../base/iam-role"
 
-  name               = local.ec2_node1_role_name
+  name = local.ec2_node1_role_name
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -222,7 +215,7 @@ module "local_ec2_node1_role" {
 module "local_ec2_node2_role" {
   source = "../../base/iam-role"
 
-  name               = local.ec2_node2_role_name
+  name = local.ec2_node2_role_name
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -239,30 +232,34 @@ module "local_ec2_node2_role" {
   tags                = var.common_tags
 }
 
-# ── EFS ────────────────────────────────────────────────────────────────────────
-
 module "local_efs" {
   source = "../../base/efs"
 
-  name                 = var.efs_name
-  enable_encryption    = var.efs_enable_encryption
-  performance_mode     = var.efs_performance_mode
-  throughput_mode      = var.efs_throughput_mode
-  transition_to_ia     = var.efs_transition_to_ia
-  access_points        = var.efs_access_points
+  name                      = var.efs_name
+  efs_policy                = local.efs_policy
+  enable_encryption         = var.efs_enable_encryption
+  performance_mode          = var.efs_performance_mode
+  throughput_mode           = var.efs_throughput_mode
+  transition_to_ia          = var.efs_transition_to_ia
+  access_points             = var.efs_access_points
   enable_file_system_policy = var.efs_enforce_role_based_mount
   allowed_principal_arns = [
     module.local_ec2_node1_role.role_arn,
     module.local_ec2_node2_role.role_arn
   ]
   allow_client_root_access = false
-  enable_mount         = true
-  subnet_ids           = values(module.local_subnet.private_subnets)
-  security_group_ids   = [module.local_efs_sg.id]
-  backup_policy_status = "ENABLED"
-  tags                 = var.common_tags
+  enable_mount             = true
+  subnet_ids               = values(module.local_subnet.private_subnets)
+  security_group_ids       = [module.local_efs_sg.id]
+  backup_policy_status     = "ENABLED"
+  tags                     = var.common_tags
 
-  depends_on = [module.local_subnet, module.local_efs_sg, module.local_ec2_node1_role, module.local_ec2_node2_role]
+  depends_on = [
+    module.local_subnet,
+    module.local_efs_sg,
+    module.local_ec2_node1_role,
+    module.local_ec2_node2_role
+  ]
 }
 
 module "local_bastion_ec2" {
@@ -275,7 +272,7 @@ module "local_bastion_ec2" {
   security_group_ids  = [module.local_bastion_sg.id]
   associate_public_ip = true
   key_name            = module.local_key_pair.name
-  user_data           = "#!/bin/bash\necho bastion > /tmp/node-role.txt\n"
+  user_data           = null
   volume_size         = var.bastion_volume_size
   volume_type         = var.bastion_volume_type
 
@@ -284,55 +281,69 @@ module "local_bastion_ec2" {
     Role = "bastion"
   })
 
-  depends_on = [module.local_route_table_association, module.local_bastion_sg, module.local_key_pair]
+  depends_on = [
+    module.local_route_table_association,
+    module.local_bastion_sg,
+    module.local_key_pair
+  ]
 }
-
-# ── EC2 instances ──────────────────────────────────────────────────────────────
 
 module "local_ec2_node1" {
   source = "../../base/ec2"
 
-  name                = var.ec2_node1_name
-  ami_id              = var.ec2_ami_id
-  instance_type       = var.ec2_instance_type
-  subnet_id           = module.local_subnet.private_subnets[var.ec2_node1_subnet_name]
-  security_group_ids  = [module.local_ec2_sg.id]
-  associate_public_ip = false
-  key_name            = module.local_key_pair.name
+  name                  = var.ec2_node1_name
+  ami_id                = var.ec2_ami_id
+  instance_type         = var.ec2_instance_type
+  subnet_id             = module.local_subnet.private_subnets[var.ec2_node1_subnet_name]
+  security_group_ids    = [module.local_ec2_sg.id]
+  associate_public_ip   = false
+  key_name              = module.local_key_pair.name
   instance_profile_name = local.ec2_node1_instance_profile_name
   role_name             = module.local_ec2_node1_role.role_name
-  user_data           = local.efs_user_data
-  volume_size         = var.ec2_volume_size
-  volume_type         = var.ec2_volume_type
+  user_data             = local.efs_user_data
+  volume_size           = var.ec2_volume_size
+  volume_type           = var.ec2_volume_type
 
   tags = merge(var.common_tags, {
     Name = var.ec2_node1_name
     Role = "efs-client"
   })
 
-  depends_on = [module.local_subnet, module.local_ec2_sg, module.local_key_pair, module.local_efs, module.local_ec2_node1_role]
+  depends_on = [
+    module.local_subnet,
+    module.local_ec2_sg,
+    module.local_key_pair,
+    module.local_efs,
+    module.local_ec2_node1_role
+  ]
 }
 
 module "local_ec2_node2" {
   source = "../../base/ec2"
 
-  name                = var.ec2_node2_name
-  ami_id              = var.ec2_ami_id
-  instance_type       = var.ec2_instance_type
-  subnet_id           = module.local_subnet.private_subnets[var.ec2_node2_subnet_name]
-  security_group_ids  = [module.local_ec2_sg.id]
-  associate_public_ip = false
-  key_name            = module.local_key_pair.name
+  name                  = var.ec2_node2_name
+  ami_id                = var.ec2_ami_id
+  instance_type         = var.ec2_instance_type
+  subnet_id             = module.local_subnet.private_subnets[var.ec2_node2_subnet_name]
+  security_group_ids    = [module.local_ec2_sg.id]
+  associate_public_ip   = false
+  key_name              = module.local_key_pair.name
   instance_profile_name = local.ec2_node2_instance_profile_name
   role_name             = module.local_ec2_node2_role.role_name
-  user_data           = local.efs_user_data
-  volume_size         = var.ec2_volume_size
-  volume_type         = var.ec2_volume_type
+  user_data             = local.efs_user_data
+  volume_size           = var.ec2_volume_size
+  volume_type           = var.ec2_volume_type
 
   tags = merge(var.common_tags, {
     Name = var.ec2_node2_name
     Role = "efs-client"
   })
 
-  depends_on = [module.local_subnet, module.local_ec2_sg, module.local_key_pair, module.local_efs, module.local_ec2_node2_role]
+  depends_on = [
+    module.local_subnet,
+    module.local_ec2_sg,
+    module.local_key_pair,
+    module.local_efs,
+    module.local_ec2_node2_role
+  ]
 }
