@@ -2,7 +2,7 @@ aws_region = "us-east-1"
 
 tags = {
   Project = "cloudwatch-vpce-private-log-test"
-  Env     = "prd"
+  Env     = "dev"
 }
 
 vpc_name       = "cw-vpce-test-vpc"
@@ -55,9 +55,13 @@ private_rtb_assoc = [
   }
 ]
 
-private_test_subnet_name  = "private-a"
-test_instance_name        = "cw-vpce-test-ec2"
-test_instance_type        = "t3.micro"
+private_test_subnet_name = "private-a"
+logs_vpce_sg_name        = "bc-sg-vpce_logs-dev-0"
+logs_vpce_name           = "bc-vpce-logs-dev-0"
+
+app_instance_sg_name      = "bc-sg-app_instance-dev-0"
+app_instance_name         = "bc-ec2-app_instance-dev-0"
+app_instance_type         = "t3.micro"
 log_push_interval_seconds = 30
 
 cloudwatch_logs_retention_in_days = 7
