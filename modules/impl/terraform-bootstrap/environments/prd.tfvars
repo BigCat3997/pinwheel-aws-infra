@@ -1,7 +1,9 @@
-tags = {
+common_tags = {
   Project     = "Pinwheel"
+  Created_By  = "Terraform"
   Managed_By  = "Terraform"
-  Environment = "Shared"
+  Deployed_By = "CICD"
+  Environment = "prd"
 }
 
 # tf_state_s3_bucket_name          = "bc-s3-terraformstate-prd-3"
