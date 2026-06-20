@@ -33,7 +33,7 @@ module "local_route_table" {
   vpc_id               = module.local_vpc.id
   public_route_tables  = [{ name = "${var.name_prefix}-public-rt" }]
   private_route_tables = []
-  internet_gateway_id  = module.local_internet_gateway.internet_gateway_id
+  internet_gateway_id  = module.local_internet_gateway.id
   tags                 = local.common_tags
 }
 
@@ -48,7 +48,7 @@ module "local_route_table_association" {
     }
   ]
   private_rtb_assoc       = []
-  public_subnet_ids       = module.local_subnet.public_subnet_ids
+  public_subnet_ids       = module.local_subnet.public_subnets
   private_subnet_ids      = {}
   public_route_table_ids  = module.local_route_table.public_route_table_ids
   private_route_table_ids = {}
@@ -163,7 +163,7 @@ module "local_s3_interface_vpc_endpoint" {
   auto_accept                                    = var.s3_interface_auto_accept
   policy                                         = var.s3_interface_policy
   route_table_ids                                = var.s3_interface_route_table_ids
-  subnet_ids                                     = values(module.local_subnet.public_subnet_ids)
+  subnet_ids                                     = values(module.local_subnet.public_subnets)
   security_group_ids                             = [module.local_sg_s3_interface_endpoint.id]
   private_dns_enabled                            = var.s3_interface_private_dns_enabled
   ip_address_type                                = var.s3_interface_ip_address_type
@@ -174,7 +174,7 @@ module "local_s3_interface_vpc_endpoint" {
 
 module "local_web_ec2" {
   source   = "../../base/ec2"
-  for_each = module.local_subnet.public_subnet_ids
+  for_each = module.local_subnet.public_subnets
 
   name                        = "${var.name_prefix}-${each.key}-nginx"
   ami_id                      = data.aws_ssm_parameter.amazon_linux_2023.value
@@ -199,7 +199,7 @@ module "local_alb" {
 
   name                 = substr("${var.name_prefix}-alb", 0, 32)
   enable_public_access = true
-  subnet_ids           = values(module.local_subnet.public_subnet_ids)
+  subnet_ids           = values(module.local_subnet.public_subnets)
   security_group_ids   = [module.local_sg_alb.id]
   vpc_id               = module.local_vpc.id
 
