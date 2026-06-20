@@ -76,36 +76,52 @@ variable "private_rtb_assoc" {
   }))
 }
 
+variable "logs_vpce_sg_name" {
+  description = "Name tag for the security group for the VPC Endpoint for CloudWatch Logs"
+  type        = string
+  default     = "cw-logs-vpce-sg"
+}
+
+variable "logs_vpce_name" {
+  description = "Name tag for the VPC Endpoint for CloudWatch Logs"
+  type        = string
+  default     = "cw-logs-vpce"
+}
+
 variable "private_test_subnet_name" {
   description = "Private subnet name where the test EC2 runs"
   type        = string
 }
 
-variable "test_instance_name" {
+variable "app_instance_sg_name" {
+  type = string
+}
+
+variable "app_instance_name" {
   description = "Name tag for the private test EC2 instance"
   type        = string
   default     = "cw-vpce-test-ec2"
 }
 
-variable "test_instance_type" {
+variable "app_instance_type" {
   description = "EC2 instance type for the private test instance"
   type        = string
   default     = "t3.micro"
 }
 
-variable "test_instance_private_ip" {
+variable "app_instance_private_ip" {
   description = "Optional static private IP for the test instance"
   type        = string
   default     = null
 }
 
-variable "test_instance_volume_size" {
+variable "app_instance_volume_size" {
   description = "Root EBS volume size for test instance"
   type        = number
   default     = 20
 }
 
-variable "test_instance_volume_type" {
+variable "app_instance_volume_type" {
   description = "Root EBS volume type for test instance"
   type        = string
   default     = "gp3"
