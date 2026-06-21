@@ -1,0 +1,49 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowBackupRDS",
+      "Effect": "Allow",
+      "Action": [
+        "rds:DescribeDBInstances",
+        "rds:DescribeDBSnapshots",
+        "rds:CreateDBSnapshot",
+        "rds:CopyDBSnapshot",
+        "rds:DeleteDBSnapshot",
+        "rds:AddTagsToResource",
+        "rds:ListTagsForResource"
+      ],
+      "Resource": [
+        "${rds_arn}",
+        "arn:aws:rds:${aws_region}:${account_id}:snapshot:*"
+      ]
+    },
+    {
+      "Sid": "AllowBackupVaultOperations",
+      "Effect": "Allow",
+      "Action": [
+        "backup:StartBackupJob",
+        "backup:DescribeBackupVault",
+        "backup:GetBackupVaultNotifications",
+        "backup:ListRecoveryPointsByBackupVault"
+      ],
+      "Resource": "${backup_vault_arn}"
+    },
+    {
+      "Sid": "AllowKMSGrantForBackup",
+      "Effect": "Allow",
+      "Action": [
+        "kms:CreateGrant",
+        "kms:DescribeKey",
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "rds.${aws_region}.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
