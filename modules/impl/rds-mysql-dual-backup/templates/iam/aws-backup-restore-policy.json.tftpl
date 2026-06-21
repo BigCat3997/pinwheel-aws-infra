@@ -1,0 +1,51 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowRestoreRDS",
+      "Effect": "Allow",
+      "Action": [
+        "rds:DescribeDBInstances",
+        "rds:DescribeDBSnapshots",
+        "rds:RestoreDBInstanceFromDBSnapshot",
+        "rds:CreateDBInstance",
+        "rds:DeleteDBInstance",
+        "rds:ModifyDBInstance",
+        "rds:AddTagsToResource",
+        "rds:ListTagsForResource"
+      ],
+      "Resource": [
+        "${rds_arn}",
+        "arn:aws:rds:${aws_region}:${account_id}:snapshot:*",
+        "arn:aws:rds:${aws_region}:${account_id}:db:*"
+      ]
+    },
+    {
+      "Sid": "AllowRecoveryPointReads",
+      "Effect": "Allow",
+      "Action": [
+        "backup:StartRestoreJob",
+        "backup:GetRecoveryPointRestoreMetadata",
+        "backup:DescribeRecoveryPoint",
+        "backup:ListRecoveryPointsByBackupVault"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowKMSForRestore",
+      "Effect": "Allow",
+      "Action": [
+        "kms:CreateGrant",
+        "kms:DescribeKey",
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "rds.${aws_region}.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
