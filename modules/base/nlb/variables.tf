@@ -2,12 +2,27 @@ variable "name" {
   type = string
 }
 
+variable "subnet_mappings" {
+  type = list(object({
+    subnet_id            = string
+    private_ipv4_address = optional(string)
+    allocation_id        = optional(string)
+  }))
+  default = []
+}
+
 variable "subnet_ids" {
-  type = list(string)
+  type    = list(string)
+  default = null
 }
 
 variable "vpc_id" {
   type = string
+}
+
+variable "enable_stickiness" {
+  type    = bool
+  default = false
 }
 
 variable "target_group_name" {
@@ -42,6 +57,12 @@ variable "autoscaling_group_name" {
 
 variable "target_instance_ids" {
   description = "List of EC2 instance IDs to attach to the NLB target group"
+  type        = list(string)
+  default     = []
+}
+
+variable "target_ips" {
+  description = "List of IP addresses to attach to the NLB target group when target_type is ip"
   type        = list(string)
   default     = []
 }
