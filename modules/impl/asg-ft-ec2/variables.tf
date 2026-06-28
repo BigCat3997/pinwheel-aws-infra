@@ -70,21 +70,21 @@ variable "private_route_tables" {
   }))
 }
 
-variable "public_rt_subnet_associations" {
+variable "public_rtb_subnet_assocs" {
   description = "Public route table to subnet associations"
   type = list(object({
-    key     = string
-    sn_name = string
-    rt_name = string
+    key              = string
+    subnet_name      = string
+    route_table_name = string
   }))
 }
 
-variable "rt_subnet_associations" {
+variable "private_rtb_subnet_assocs" {
   description = "Private route table to subnet associations"
   type = list(object({
-    key     = string
-    sn_name = string
-    rt_name = string
+    key              = string
+    subnet_name      = string
+    route_table_name = string
   }))
 }
 
@@ -125,10 +125,10 @@ variable "bastion_key_pair_name" {
   description = "Name of the key pair for the bastion EC2 instance"
 }
 
-variable "bastion_public_key_path" {
-  type        = string
-  description = "Path to the public key for the bastion EC2 instance"
-}
+# variable "bastion_public_key_path" {
+#   type        = string
+#   description = "Path to the public key for the bastion EC2 instance"
+# }
 
 variable "bastion_name" {
   type        = string
@@ -397,6 +397,12 @@ variable "nlb_name" {
   type        = string
 }
 
+variable "nlb_enable_public_access" {
+  description = "Whether to enable public access for the NLB"
+  type        = bool
+  default     = false
+}
+
 variable "nlb_target_group_name" {
   description = "Name for the NLB target group"
   type        = string
@@ -419,6 +425,17 @@ variable "nlb_target_type" {
   description = "Target type for NLB target group"
   type        = string
   default     = "instance"
+}
+
+variable "nlb_enable_stickiness" {
+  type    = bool
+  default = true
+}
+
+variable "nlb_target_ips" {
+  description = "Optional list of IP addresses to register in the NLB target group when nlb_target_type is ip"
+  type        = list(string)
+  default     = []
 }
 
 variable "nlb_listener_port" {
