@@ -8,7 +8,7 @@ locals {
     cidrhost(local.public_subnet_cidr_by_name[var.vpn_subnet_name], 10)
   )
 
-  vpn_user_data = templatefile("${path.module}/resources/user-data/openvpn-setup.sh.tftpl", {
+  vpn_user_data = templatefile("${path.module}/templates/openvpn-setup.sh.tftpl", {
     vpn_server_port  = var.vpn_server_port
     vpn_network      = var.vpn_network
     vpn_network_mask = var.vpn_network_mask

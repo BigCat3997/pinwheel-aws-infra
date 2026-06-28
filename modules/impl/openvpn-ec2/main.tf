@@ -27,7 +27,7 @@ module "local_route_table" {
   vpc_id               = module.local_vpc.id
   public_route_tables  = var.public_route_tables
   private_route_tables = []
-  internet_gateway_id  = module.local_internet_gateway.internet_gateway_id
+  internet_gateway_id  = module.local_internet_gateway.id
   nat_gateway_ids      = {}
   tags                 = var.tags
 
@@ -38,7 +38,7 @@ module "local_route_table_association" {
   source                  = "../../base/route-table-association"
   public_rtb_assoc        = var.public_rtb_assoc
   private_rtb_assoc       = []
-  public_subnet_ids       = module.local_subnet.public_subnet_ids
+  public_subnet_ids       = module.local_subnet.public_subnets
   private_subnet_ids      = {}
   public_route_table_ids  = module.local_route_table.public_route_table_ids
   private_route_table_ids = {}
@@ -53,11 +53,10 @@ module "local_vpn_eip" {
 }
 
 module "local_key_pair" {
-  source          = "../../base/key-pair"
-  create          = true
-  name            = var.key_pair_name
-  public_key_path = var.ssh_public_key_path
-  tags            = var.tags
+  source = "../../base/key-pair"
+  create = true
+  name   = var.key_pair_name
+  tags   = var.tags
 }
 
 module "local_vpn_sg" {
@@ -87,7 +86,7 @@ module "local_vpn_ec2" {
   name               = var.vpn_instance_name
   ami_id             = local.vpn_ami_id_effective
   instance_type      = var.vpn_instance_type
-  subnet_id          = module.local_subnet.public_subnet_ids[var.vpn_subnet_name]
+  subnet_id          = module.local_subnet.public_subnets[var.vpn_subnet_name]
   private_ip         = local.vpn_private_ip_static
   security_group_ids = [module.local_vpn_sg.id]
   key_name           = module.local_key_pair.name
