@@ -30,8 +30,10 @@ resource "aws_instance" "this" {
   }
 
   metadata_options {
-    http_endpoint = var.metadata_http_endpoint
-    http_tokens   = var.metadata_http_tokens
+    http_endpoint               = var.metadata_http_endpoint
+    http_tokens                 = var.metadata_http_tokens
+    http_put_response_hop_limit = var.metadata_http_put_response_hop_limit
+    instance_metadata_tags      = var.metadata_instance_metadata_tags
   }
 
   tags = merge(
