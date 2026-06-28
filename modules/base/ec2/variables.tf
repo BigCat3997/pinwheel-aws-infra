@@ -143,6 +143,18 @@ variable "metadata_http_tokens" {
   default     = "required"
 }
 
+variable "metadata_http_put_response_hop_limit" {
+  description = "The desired HTTP PUT response hop limit for instance metadata requests"
+  type        = number
+  default     = 1
+}
+
+variable "metadata_instance_metadata_tags" {
+  description = "Whether to enable instance metadata tags"
+  type        = string
+  default     = "disabled"
+}
+
 variable "key_name" {
   type        = string
   description = "Name of the EC2 key pair"
