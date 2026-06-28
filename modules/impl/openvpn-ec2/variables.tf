@@ -10,8 +10,6 @@ variable "tags" {
   default     = {}
 }
 
-# --- VPC ---
-
 variable "vpc_name" {
   description = "Name tag for the VPC"
   type        = string
@@ -53,19 +51,15 @@ variable "public_rtb_assoc" {
   }))
 }
 
-# --- Key pair ---
-
 variable "key_pair_name" {
   description = "EC2 key pair name for the OpenVPN instance"
   type        = string
 }
 
-variable "ssh_public_key_path" {
-  description = "Local path to the SSH public key file (.pub) to register as EC2 key pair"
-  type        = string
-}
-
-# --- OpenVPN EC2 ---
+# variable "ssh_public_key_path" {
+#   description = "Local path to the SSH public key file (.pub) to register as EC2 key pair"
+#   type        = string
+# }
 
 variable "vpn_instance_name" {
   description = "Name tag for the OpenVPN EC2 instance"
@@ -108,8 +102,6 @@ variable "vpn_volume_type" {
   default     = "gp3"
 }
 
-# --- OpenVPN settings (injected into user-data) ---
-
 variable "vpn_server_port" {
   description = "TCP port OpenVPN will listen on"
   type        = number
@@ -127,8 +119,6 @@ variable "vpn_network_mask" {
   type        = string
   default     = "255.255.255.0"
 }
-
-# --- Ingress CIDRs ---
 
 variable "vpn_client_ingress_cidrs" {
   description = "CIDR blocks allowed to connect to the OpenVPN port (0.0.0.0/0 allows any phone/client)"
