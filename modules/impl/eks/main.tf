@@ -82,16 +82,9 @@ module "local_sg_cluster" {
 module "local_cluster_role" {
   source = "../../base/iam-role"
 
-  name        = var.cluster_role_name
-  description = "IAM role for EKS cluster control plane"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "eks.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
+  name               = var.cluster_role_name
+  description        = "IAM role for EKS cluster control plane"
+  assume_role_policy = file("${path.module}/files/iam/aws-eks-assume-trust-policy.json")
   managed_policy_arns = [
     "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
   ]
@@ -103,14 +96,8 @@ module "local_node_role" {
 
   name        = var.node_role_name
   description = "IAM role for EKS managed node groups"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
+
+  assume_role_policy = file("${path.module}/files/iam/aws-ec2-assume-trust-policy.json")
   managed_policy_arns = [
     "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
     "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
