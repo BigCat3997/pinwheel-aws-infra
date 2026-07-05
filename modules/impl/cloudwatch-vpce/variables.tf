@@ -76,18 +76,6 @@ variable "private_rtb_assoc" {
   }))
 }
 
-variable "logs_vpce_sg_name" {
-  description = "Name tag for the security group for the VPC Endpoint for CloudWatch Logs"
-  type        = string
-  default     = "cw-logs-vpce-sg"
-}
-
-variable "logs_vpce_name" {
-  description = "Name tag for the VPC Endpoint for CloudWatch Logs"
-  type        = string
-  default     = "cw-logs-vpce"
-}
-
 variable "private_test_subnet_name" {
   description = "Private subnet name where the test EC2 runs"
   type        = string
@@ -127,6 +115,24 @@ variable "app_instance_volume_type" {
   default     = "gp3"
 }
 
+variable "app_instance_access_public_ip" {
+  description = "Whether the test EC2 instance should have a public IP"
+  type        = bool
+  default     = false
+}
+
+variable "app_instance_volume_encrypted" {
+  description = "Whether the root EBS volume for the test instance is encrypted"
+  type        = bool
+  default     = true
+}
+
+variable "volume_delete_on_termination" {
+  description = "Whether the root EBS volume for the test instance is deleted on termination"
+  type        = bool
+  default     = true
+}
+
 variable "cloudwatch_logs_retention_in_days" {
   description = "Retention in days for the test CloudWatch log group"
   type        = number
@@ -137,4 +143,60 @@ variable "log_push_interval_seconds" {
   description = "Interval in seconds between continuous test log events"
   type        = number
   default     = 30
+}
+
+variable "logs_vpce_sg_name" {
+  description = "Name tag for the security group for the VPC Endpoint for CloudWatch Logs"
+  type        = string
+  default     = "cw-logs-vpce-sg"
+}
+
+variable "logs_vpce_name" {
+  description = "Name tag for the CloudWatch Logs VPC Endpoint"
+  type        = string
+}
+
+variable "logs_vpce_service_name" {
+  description = "AWS service name for the CloudWatch Logs VPC Endpoint"
+  type        = string
+}
+
+variable "logs_vpce_vpc_endpoint_type" {
+  description = "Type of VPC endpoint (Interface or Gateway)"
+  type        = string
+}
+
+variable "logs_vpce_private_dns_enabled" {
+  description = "Whether private DNS is enabled for the VPC endpoint"
+  type        = bool
+  default     = false
+}
+
+variable "logs_vpce_enable_dns_support" {
+  description = "Enable DNS support for the VPC"
+  type        = bool
+  default     = false
+}
+
+variable "logs_vpce_enable_dns_hostnames" {
+  description = "Enable DNS hostnames for the VPC"
+  type        = bool
+  default     = false
+}
+
+variable "logs_vpce_sg_names" {
+  type = list(string)
+}
+
+variable "logs_vpce_subnet_names" {
+  type = list(string)
+}
+
+variable "logs_vpce_subnet_configs" {
+  type = list(object({
+    subnet_id = string
+    ipv4      = optional(string)
+    ipv6      = optional(string)
+  }))
+  default = []
 }

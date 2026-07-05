@@ -3,14 +3,14 @@ output "vpc_id" {
   value       = module.local_vpc.id
 }
 
-output "cloudwatch_logs_vpc_endpoint_id" {
-  description = "CloudWatch Logs interface VPC endpoint ID"
-  value       = aws_vpc_endpoint.logs.id
-}
+# output "cloudwatch_logs_vpc_endpoint_id" {
+#   description = "CloudWatch Logs interface VPC endpoint ID"
+#   value       = aws_vpc_endpoint.logs.id
+# }
 
 output "test_ec2_private_ip" {
   description = "Private IP of the test EC2"
-  value       = module.local_private_test_ec2.private_ip
+  value       = module.local_private_main_ec2.private_ip
 }
 
 output "test_log_group_name" {
