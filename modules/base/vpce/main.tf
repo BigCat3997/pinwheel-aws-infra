@@ -17,6 +17,16 @@ resource "aws_vpc_endpoint" "this" {
     }
   }
 
+  dynamic "subnet_configuration" {
+    for_each = var.subnet_configs
+
+    content {
+      subnet_id = subnet_configuration.value.subnet_id
+      ipv4      = try(subnet_configuration.value.ipv4, null)
+      ipv6      = try(subnet_configuration.value.ipv6, null)
+    }
+  }
+
   tags = merge(var.tags, {
     Name = var.name
   })
