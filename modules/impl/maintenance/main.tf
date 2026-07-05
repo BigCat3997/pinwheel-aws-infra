@@ -287,7 +287,7 @@ module "local_maintenance_lambda" {
   role_name           = module.local_lambda_iam_role.role_name
   role_arn            = module.local_lambda_iam_role.role_arn
   create_function_url = true
-  subnet_ids          = values(module.local_subnet.public_subnet_ids)
+  subnet_ids          = values(module.local_subnet.public_subnets)
   security_group_ids  = [module.local_sg_lambda.id]
   env_vars = {
     BUCKET_NAME = var.s3_bucket_name
