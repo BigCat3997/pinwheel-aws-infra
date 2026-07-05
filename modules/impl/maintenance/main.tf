@@ -155,7 +155,7 @@ module "local_sg_s3_interface_endpoint" {
 }
 
 module "local_s3_interface_vpc_endpoint" {
-  source = "../../base/vpc-endpoint"
+  source = "../../base/vpce"
 
   vpc_id                                         = module.local_vpc.id
   service_name                                   = coalesce(var.s3_interface_service_name, "com.amazonaws.${var.aws_region}.s3")
