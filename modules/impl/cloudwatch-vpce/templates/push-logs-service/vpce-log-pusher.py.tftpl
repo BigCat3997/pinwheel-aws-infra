@@ -108,6 +108,15 @@ def aws_request(action, payload, access_key, secret_key, session_token):
         return response.read().decode("utf-8")
 
 
+def aws_error_code(error):
+    try:
+        body = error.read().decode("utf-8")
+        payload = json.loads(body)
+        return payload.get("__type", "").split("#")[-1]
+    except Exception:
+        return ""
+
+
 headers = metadata_headers()
 instance_id = request(f"{imds_base}/meta-data/instance-id", headers=headers).strip()
 log_stream = f"{instance_id}-{stream_prefix}"
@@ -128,9 +137,16 @@ while True:
                     secret_key,
                     session_token,
                 )
-            except urllib.error.HTTPError:
-                pass
-            stream_ready = True
+                stream_ready = True
+            except urllib.error.HTTPError as error:
+                error_code = aws_error_code(error)
+                if error_code == "ResourceAlreadyExistsException":
+                    stream_ready = True
+                else:
+                    with open("/var/log/vpce-test.log", "a", encoding="utf-8") as handle:
+                        handle.write(f"CreateLogStream failed: {error_code or error}\n")
+                    time.sleep(interval_seconds)
+                    continue
 
         counter += 1
         timestamp = int(time.time() * 1000)
@@ -139,17 +155,24 @@ while True:
             f"{datetime.datetime.utcnow().isoformat()}Z"
         )
 
-        aws_request(
-            "PutLogEvents",
-            {
-                "logGroupName": log_group,
-                "logStreamName": log_stream,
-                "logEvents": [{"timestamp": timestamp, "message": message}],
-            },
-            access_key,
-            secret_key,
-            session_token,
-        )
+        try:
+            aws_request(
+                "PutLogEvents",
+                {
+                    "logGroupName": log_group,
+                    "logStreamName": log_stream,
+                    "logEvents": [{"timestamp": timestamp, "message": message}],
+                },
+                access_key,
+                secret_key,
+                session_token,
+            )
+        except urllib.error.HTTPError as error:
+            error_code = aws_error_code(error)
+            if error_code == "ResourceNotFoundException":
+                # The log stream can be missing if first creation failed; retry next loop.
+                stream_ready = False
+            raise
 
         with open("/var/log/vpce-test.log", "a", encoding="utf-8") as handle:
             handle.write(f"sent #{counter} at {timestamp}\n")

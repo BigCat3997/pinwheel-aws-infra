@@ -27,8 +27,8 @@ locals {
   ]
 
 
-  cloudwatch_log_group_name = "/aws/ec2/${var.app_instance_name}/push-logs-service"
-  cloudwatch_stream_prefix  = "ec2"
+  cloudwatch_log_group_name = "/aws/vpce-test/${var.app_instance_name}/push-logs-service"
+  cloudwatch_stream_prefix  = "vpce-test"
 
   vpce_log_pusher_python = templatefile("${path.module}/templates/push-logs-service/vpce-log-pusher.py.tftpl", {
     aws_region                = var.aws_region
