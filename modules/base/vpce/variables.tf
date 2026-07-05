@@ -37,6 +37,16 @@ variable "subnet_ids" {
   default     = null
 }
 
+variable "subnet_configs" {
+  description = "Subnet configurations for Interface or GatewayLoadBalancer endpoints"
+  type = list(object({
+    subnet_id = string
+    ipv4      = optional(string)
+    ipv6      = optional(string)
+  }))
+  default = []
+}
+
 variable "security_group_ids" {
   description = "Security group IDs for Interface endpoints"
   type        = list(string)
