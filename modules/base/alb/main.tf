@@ -29,7 +29,8 @@ resource "aws_lb_target_group" "this" {
 }
 
 resource "aws_lb_target_group" "lambda" {
-  count = var.lambda_function_arn != null ? 1 : 0
+  count = var.enable_integrate_lambda ? 1 : 0
+
 
   name        = var.lambda_target_group_name
   target_type = "lambda"
@@ -40,7 +41,7 @@ resource "aws_lb_target_group" "lambda" {
 }
 
 resource "aws_lambda_permission" "alb_invoke" {
-  count = var.lambda_function_arn != null ? 1 : 0
+  count = var.enable_integrate_lambda ? 1 : 0
 
   statement_id  = "AllowExecutionFromALB"
   action        = "lambda:InvokeFunction"
@@ -50,7 +51,7 @@ resource "aws_lambda_permission" "alb_invoke" {
 }
 
 resource "aws_lb_target_group_attachment" "lambda" {
-  count = var.lambda_function_arn != null ? 1 : 0
+  count = var.enable_integrate_lambda ? 1 : 0
 
   target_group_arn = aws_lb_target_group.lambda[0].arn
   target_id        = var.lambda_function_arn

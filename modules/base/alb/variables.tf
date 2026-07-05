@@ -1,3 +1,8 @@
+variable "tags" {
+  type    = map(string)
+  default = {}
+}
+
 variable "name" {
   type = string
 }
@@ -52,9 +57,9 @@ variable "target_instance_ids" {
   default     = []
 }
 
-variable "tags" {
-  type    = map(string)
-  default = {}
+variable "enable_integrate_lambda" {
+  type    = bool
+  default = false
 }
 
 variable "maintenance_mode" {
