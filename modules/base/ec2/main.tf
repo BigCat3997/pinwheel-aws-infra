@@ -42,6 +42,8 @@ resource "aws_instance" "this" {
       Name = var.name
     }
   )
+
+  depends_on = [aws_iam_instance_profile.this]
 }
 
 resource "aws_ebs_volume" "external" {
@@ -63,4 +65,6 @@ resource "aws_volume_attachment" "external" {
   device_name = var.external_volume_device_name
   volume_id   = aws_ebs_volume.external[0].id
   instance_id = aws_instance.this.id
+
+  depends_on = [aws_instance.this]
 }
