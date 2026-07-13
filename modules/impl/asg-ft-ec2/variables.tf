@@ -88,7 +88,7 @@ variable "private_rtb_subnet_assocs" {
   }))
 }
 
-variable "nsg_definitions" {
+variable "security_groups" {
   description = "Security group definitions"
   type = list(object({
     name = string
