@@ -62,7 +62,7 @@ module "route_table_association" {
 
 module "sg" {
   source   = "../../base/sg"
-  for_each = { for sg in var.nsg_definitions : sg.name => sg }
+  for_each = { for sg in var.security_groups : sg.name => sg }
 
   name           = each.value.name
   vpc_id         = module.vpc.id
@@ -184,20 +184,24 @@ module "asg" {
 module "nlb" {
   source = "../../base/nlb"
 
-  name                   = var.nlb_name
-  enable_public_access   = var.nlb_enable_public_access
-  vpc_id                 = module.vpc.id
-  subnet_mappings        = local.subnet_mappings
-  enable_stickiness      = var.nlb_enable_stickiness
-  target_ips             = var.nlb_target_ips
-  listener_port          = var.nlb_listener_port
-  listener_protocol      = var.nlb_listener_protocol
-  target_group_name      = var.nlb_target_group_name
-  target_port            = var.nlb_target_port
-  target_protocol        = var.nlb_target_protocol
-  target_type            = var.nlb_target_type
-  autoscaling_group_name = module.asg.name
-  tags                   = var.tags
+  name                 = var.nlb_name
+  enable_public_access = var.nlb_enable_public_access
+  vpc_id               = module.vpc.id
+  subnet_mappings      = local.subnet_mappings
+  listener_port        = var.nlb_listener_port
+  listener_protocol    = var.nlb_listener_protocol
+  target_groups = [
+    {
+      name                   = var.nlb_target_group_name
+      port                   = var.nlb_target_port
+      protocol               = var.nlb_target_protocol
+      target_type            = var.nlb_target_type
+      enable_stickiness      = var.nlb_enable_stickiness
+      autoscaling_group_name = module.asg.name
+      target_ips             = var.nlb_target_ips
+    }
+  ]
+  tags = var.tags
 }
 
 module "alb" {
