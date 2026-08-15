@@ -39,16 +39,21 @@ module "local_shared_igw" {
 }
 
 module "local_shared_nat_gateway" {
-  source            = "../../base/nat-gateway"
-  nat_gateways      = var.shared_nat_gateways
-  public_subnet_ids = module.local_shared_subnet.public_subnet_ids
-  tags              = var.tags
+  source   = "../../base/nat-gateway"
+  for_each = { for ngw in var.shared_nat_gateways : ngw.name => ngw }
+
+  name      = each.key
+  eip_id    = module.local_shared_eip[each.value.eip_name].id
+  subnet_id = module.local_shared_subnet.public_subnets[each.value.subnet_name]
+  tags      = var.tags
 }
 
 module "local_shared_eip" {
-  source       = "../../base/eip"
-  nat_gateways = var.shared_nat_gateways
-  tags         = var.tags
+  source   = "../../base/eip"
+  for_each = { for ngw in var.shared_nat_gateways : ngw.eip_name => ngw }
+
+  name = each.key
+  tags = var.tags
 }
 
 module "local_shared_route_table" {
@@ -56,19 +61,32 @@ module "local_shared_route_table" {
   vpc_id               = module.local_shared_vpc.id
   public_route_tables  = var.shared_public_route_tables
   private_route_tables = var.shared_private_route_tables
-  internet_gateway_id  = module.local_shared_igw.internet_gateway_id
-  nat_gateway_ids      = module.local_shared_nat_gateway.nat_gateway_ids
+  internet_gateway_id  = module.local_shared_igw.id
+  nat_gateway_ids      = { for name, ngw in module.local_shared_nat_gateway : name => ngw.id }
   tags                 = var.tags
 }
 
 module "local_shared_route_table_association" {
-  source                        = "../../base/route-table-association"
-  public_rt_subnet_associations = var.shared_public_rt_subnet_associations
-  rt_subnet_associations        = var.shared_private_rt_subnet_associations
-  public_subnet_ids             = module.local_shared_subnet.public_subnet_ids
-  private_subnet_ids            = module.local_shared_subnet.private_subnet_ids
-  public_route_table_ids        = module.local_shared_route_table.public_route_table_ids
-  private_route_table_ids       = module.local_shared_route_table.private_route_table_ids
+  source = "../../base/route-table-association"
+
+  public_rtb_assoc = [
+    for assoc in var.shared_public_rt_subnet_associations : {
+      key              = assoc.key
+      subnet_name      = assoc.sn_name
+      route_table_name = assoc.rt_name
+    }
+  ]
+  private_rtb_assoc = [
+    for assoc in var.shared_private_rt_subnet_associations : {
+      key              = assoc.key
+      subnet_name      = assoc.sn_name
+      route_table_name = assoc.rt_name
+    }
+  ]
+  public_subnet_ids       = module.local_shared_subnet.public_subnets
+  private_subnet_ids      = module.local_shared_subnet.private_subnets
+  public_route_table_ids  = module.local_shared_route_table.public_route_table_ids
+  private_route_table_ids = module.local_shared_route_table.private_route_table_ids
 }
 
 module "tgw_shared_vpc_attachment" {
@@ -77,7 +95,7 @@ module "tgw_shared_vpc_attachment" {
   name               = var.tgw_shared_vpc_attachment_name
   transit_gateway_id = module.tgw.id
   vpc_id             = module.local_shared_vpc.id
-  subnet_ids         = [for name in var.tgw_shared_vpc_attachment_subnet_names : module.local_shared_subnet.private_subnet_ids[name]]
+  subnet_ids         = [for name in var.tgw_shared_vpc_attachment_subnet_names : module.local_shared_subnet.private_subnets[name]]
   dns_support        = var.tgw_shared_vpc_attachment_dns_support
   ipv6_support       = var.tgw_shared_vpc_attachment_ipv6_support
   tags               = var.tags
@@ -114,18 +132,31 @@ module "consumer_route_table" {
   vpc_id               = module.consumer_vpc.id
   public_route_tables  = var.consumer_public_route_tables
   private_route_tables = var.consumer_private_route_tables
-  internet_gateway_id  = module.consumer_igw.internet_gateway_id
+  internet_gateway_id  = module.consumer_igw.id
   tags                 = var.tags
 }
 
 module "consumer_route_table_association" {
-  source                        = "../../base/route-table-association"
-  public_rt_subnet_associations = var.consumer_public_rt_subnet_associations
-  rt_subnet_associations        = var.consumer_private_rt_subnet_associations
-  public_subnet_ids             = module.consumer_subnet.public_subnet_ids
-  private_subnet_ids            = module.consumer_subnet.private_subnet_ids
-  public_route_table_ids        = module.consumer_route_table.public_route_table_ids
-  private_route_table_ids       = module.consumer_route_table.private_route_table_ids
+  source = "../../base/route-table-association"
+
+  public_rtb_assoc = [
+    for assoc in var.consumer_public_rt_subnet_associations : {
+      key              = assoc.key
+      subnet_name      = assoc.sn_name
+      route_table_name = assoc.rt_name
+    }
+  ]
+  private_rtb_assoc = [
+    for assoc in var.consumer_private_rt_subnet_associations : {
+      key              = assoc.key
+      subnet_name      = assoc.sn_name
+      route_table_name = assoc.rt_name
+    }
+  ]
+  public_subnet_ids       = module.consumer_subnet.public_subnets
+  private_subnet_ids      = module.consumer_subnet.private_subnets
+  public_route_table_ids  = module.consumer_route_table.public_route_table_ids
+  private_route_table_ids = module.consumer_route_table.private_route_table_ids
 }
 
 module "tgw_consumer_vpc_attachment" {
@@ -134,7 +165,7 @@ module "tgw_consumer_vpc_attachment" {
   name               = var.tgw_consumer_vpc_attachment_name
   transit_gateway_id = module.tgw.id
   vpc_id             = module.consumer_vpc.id
-  subnet_ids         = [for name in var.tgw_consumer_vpc_attachment_subnet_names : module.consumer_subnet.private_subnet_ids[name]]
+  subnet_ids         = [for name in var.tgw_consumer_vpc_attachment_subnet_names : module.consumer_subnet.private_subnets[name]]
   dns_support        = var.tgw_consumer_vpc_attachment_dns_support
   ipv6_support       = var.tgw_consumer_vpc_attachment_ipv6_support
   tags               = var.tags
@@ -184,7 +215,7 @@ module "bastion_key_pair" {
 
   create          = var.bastion_create_key_pair
   name            = var.bastion_key_pair_name
-  public_key_path = var.bastion_public_key_path
+  # public_key_path = var.bastion_public_key_path
   tags            = var.tags
 }
 
@@ -193,7 +224,7 @@ module "app_ec2_key_pair" {
 
   create          = var.app_ec2_create_key_pair
   name            = var.app_ec2_key_pair_name
-  public_key_path = var.app_ec2_public_key_path
+  # public_key_path = var.app_ec2_public_key_path
   tags            = var.tags
 }
 
@@ -268,7 +299,7 @@ module "bastion_ec2" {
   name                         = var.bastion_name
   ami_id                       = var.bastion_ami_id
   instance_type                = var.bastion_instance_type
-  subnet_id                    = module.consumer_subnet.public_subnet_ids[var.bastion_subnet_name]
+  subnet_id                    = module.consumer_subnet.public_subnets[var.bastion_subnet_name]
   security_group_ids           = [module.bastion_sg.id]
   associate_public_ip          = var.bastion_associate_public_ip
   key_name                     = module.bastion_key_pair.name
@@ -289,7 +320,7 @@ module "app_ec2" {
   name                         = var.app_ec2_name
   ami_id                       = var.app_ec2_ami_id
   instance_type                = var.app_ec2_instance_type
-  subnet_id                    = module.consumer_subnet.private_subnet_ids[var.app_ec2_subnet_name]
+  subnet_id                    = module.consumer_subnet.private_subnets[var.app_ec2_subnet_name]
   security_group_ids           = [module.app_ec2_sg.id]
   associate_public_ip          = var.app_ec2_associate_public_ip
   key_name                     = module.app_ec2_key_pair.name

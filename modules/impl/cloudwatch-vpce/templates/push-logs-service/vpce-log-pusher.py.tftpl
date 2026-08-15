@@ -1,0 +1,183 @@
+import datetime
+import hashlib
+import hmac
+import json
+import time
+import urllib.error
+import urllib.request
+
+region = "${aws_region}"
+log_group = "${cloudwatch_log_group_name}"
+stream_prefix = "${cloudwatch_stream_prefix}"
+interval_seconds = ${log_push_interval_seconds}
+imds_base = "http://169.254.169.254/latest"
+
+
+def request(url, method="GET", headers=None, data=None):
+    req = urllib.request.Request(url, data=data, method=method)
+    for key, value in (headers or {}).items():
+        req.add_header(key, value)
+    with urllib.request.urlopen(req, timeout=10) as response:
+        return response.read().decode("utf-8")
+
+
+def metadata_headers():
+    token = None
+    try:
+        token = request(
+            f"{imds_base}/api/token",
+            method="PUT",
+            headers={"X-aws-ec2-metadata-token-ttl-seconds": "21600"},
+        )
+    except Exception:
+        token = None
+
+    if token:
+        return {"X-aws-ec2-metadata-token": token}
+    return {}
+
+
+def get_credentials(headers):
+    role_name = request(f"{imds_base}/meta-data/iam/security-credentials/", headers=headers).strip()
+    creds = json.loads(request(f"{imds_base}/meta-data/iam/security-credentials/{role_name}", headers=headers))
+    return creds["AccessKeyId"], creds["SecretAccessKey"], creds["Token"]
+
+
+def sign(key, msg):
+    return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
+
+
+def get_signature_key(key, date_stamp, region_name, service_name):
+    k_date = sign(("AWS4" + key).encode("utf-8"), date_stamp)
+    k_region = sign(k_date, region_name)
+    k_service = sign(k_region, service_name)
+    k_signing = sign(k_service, "aws4_request")
+    return k_signing
+
+
+def aws_request(action, payload, access_key, secret_key, session_token):
+    service = "logs"
+    host = f"logs.{region}.amazonaws.com"
+    endpoint = f"https://{host}/"
+    content_type = "application/x-amz-json-1.1"
+    amz_target = f"Logs_20140328.{action}"
+    now = datetime.datetime.utcnow()
+    amz_date = now.strftime("%Y%m%dT%H%M%SZ")
+    date_stamp = now.strftime("%Y%m%d")
+    body = json.dumps(payload, separators=(",", ":"))
+    payload_hash = hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+    canonical_headers = (
+        f"content-type:{content_type}\n"
+        f"host:{host}\n"
+        f"x-amz-date:{amz_date}\n"
+        f"x-amz-security-token:{session_token}\n"
+        f"x-amz-target:{amz_target}\n"
+    )
+    signed_headers = "content-type;host;x-amz-date;x-amz-security-token;x-amz-target"
+    canonical_request = "\n".join([
+        "POST",
+        "/",
+        "",
+        canonical_headers,
+        signed_headers,
+        payload_hash,
+    ])
+    credential_scope = f"{date_stamp}/{region}/{service}/aws4_request"
+    string_to_sign = "\n".join([
+        "AWS4-HMAC-SHA256",
+        amz_date,
+        credential_scope,
+        hashlib.sha256(canonical_request.encode("utf-8")).hexdigest(),
+    ])
+    signing_key = get_signature_key(secret_key, date_stamp, region, service)
+    signature = hmac.new(signing_key, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
+    authorization_header = (
+        f"AWS4-HMAC-SHA256 Credential={access_key}/{credential_scope}, "
+        f"SignedHeaders={signed_headers}, Signature={signature}"
+    )
+
+    req = urllib.request.Request(endpoint, data=body.encode("utf-8"), method="POST")
+    req.add_header("Content-Type", content_type)
+    req.add_header("X-Amz-Date", amz_date)
+    req.add_header("X-Amz-Security-Token", session_token)
+    req.add_header("X-Amz-Target", amz_target)
+    req.add_header("Authorization", authorization_header)
+
+    with urllib.request.urlopen(req, timeout=10) as response:
+        return response.read().decode("utf-8")
+
+
+def aws_error_code(error):
+    try:
+        body = error.read().decode("utf-8")
+        payload = json.loads(body)
+        return payload.get("__type", "").split("#")[-1]
+    except Exception:
+        return ""
+
+
+headers = metadata_headers()
+instance_id = request(f"{imds_base}/meta-data/instance-id", headers=headers).strip()
+log_stream = f"{instance_id}-{stream_prefix}"
+stream_ready = False
+counter = 0
+
+while True:
+    try:
+        headers = metadata_headers()
+        access_key, secret_key, session_token = get_credentials(headers)
+
+        if not stream_ready:
+            try:
+                aws_request(
+                    "CreateLogStream",
+                    {"logGroupName": log_group, "logStreamName": log_stream},
+                    access_key,
+                    secret_key,
+                    session_token,
+                )
+                stream_ready = True
+            except urllib.error.HTTPError as error:
+                error_code = aws_error_code(error)
+                if error_code == "ResourceAlreadyExistsException":
+                    stream_ready = True
+                else:
+                    with open("/var/log/vpce-test.log", "a", encoding="utf-8") as handle:
+                        handle.write(f"CreateLogStream failed: {error_code or error}\n")
+                    time.sleep(interval_seconds)
+                    continue
+
+        counter += 1
+        timestamp = int(time.time() * 1000)
+        message = (
+            f"continuous vpce test log #{counter} from {instance_id} at "
+            f"{datetime.datetime.utcnow().isoformat()}Z"
+        )
+
+        try:
+            aws_request(
+                "PutLogEvents",
+                {
+                    "logGroupName": log_group,
+                    "logStreamName": log_stream,
+                    "logEvents": [{"timestamp": timestamp, "message": message}],
+                },
+                access_key,
+                secret_key,
+                session_token,
+            )
+        except urllib.error.HTTPError as error:
+            error_code = aws_error_code(error)
+            if error_code == "ResourceNotFoundException":
+                # The log stream can be missing if first creation failed; retry next loop.
+                stream_ready = False
+            raise
+
+        with open("/var/log/vpce-test.log", "a", encoding="utf-8") as handle:
+            handle.write(f"sent #{counter} at {timestamp}\n")
+    except Exception as error:
+        with open("/var/log/vpce-test.log", "a", encoding="utf-8") as handle:
+            handle.write(f"send failed: {error}\n")
+
+    time.sleep(interval_seconds)
