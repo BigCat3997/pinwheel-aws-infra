@@ -11,9 +11,8 @@ resource "aws_security_group" "this" {
 resource "aws_security_group_rule" "ingress" {
   for_each = { for idx, rule in var.security_rules : idx => rule }
 
-  type              = "ingress"
-  security_group_id = aws_security_group.this.id
-
+  type                     = "ingress"
+  security_group_id        = aws_security_group.this.id
   from_port                = each.value.from_port
   to_port                  = each.value.to_port
   protocol                 = each.value.protocol
@@ -28,11 +27,10 @@ resource "aws_security_group_rule" "egress" {
 
   type              = "egress"
   security_group_id = aws_security_group.this.id
-
-  from_port        = each.value.from_port
-  to_port          = each.value.to_port
-  protocol         = each.value.protocol
-  cidr_blocks      = lookup(each.value, "cidr_blocks", null)
-  ipv6_cidr_blocks = lookup(each.value, "ipv6_cidr_blocks", null)
-  description      = lookup(each.value, "description", null)
+  from_port         = each.value.from_port
+  to_port           = each.value.to_port
+  protocol          = each.value.protocol
+  cidr_blocks       = lookup(each.value, "cidr_blocks", null)
+  ipv6_cidr_blocks  = lookup(each.value, "ipv6_cidr_blocks", null)
+  description       = lookup(each.value, "description", null)
 }

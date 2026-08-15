@@ -28,14 +28,14 @@ output "shared_private_subnet_ids" {
   value       = module.local_shared_subnet.private_subnet_ids
 }
 
-output "shared_nat_gateway_ids" {
-  description = "Map of shared VPC NAT Gateway names to IDs"
-  value       = module.local_shared_nat_gateway.nat_gateway_ids
-}
+# output "shared_nat_gateway_ids" {
+#   description = "Map of shared VPC NAT Gateway names to IDs"
+#   value       = module.local_shared_nat_gateway.id
+# }
 
 output "shared_igw_id" {
   description = "Shared VPC Internet Gateway ID"
-  value       = module.local_shared_igw.internet_gateway_id
+  value       = module.local_shared_igw.id
 }
 
 output "tgw_shared_vpc_attachment_id" {
@@ -65,7 +65,7 @@ output "consumer_private_subnet_ids" {
 
 output "consumer_igw_id" {
   description = "Consumer VPC Internet Gateway ID"
-  value       = module.consumer_igw.internet_gateway_id
+  value       = module.consumer_igw.id
 }
 
 output "tgw_consumer_vpc_attachment_id" {

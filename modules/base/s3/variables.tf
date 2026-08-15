@@ -68,3 +68,47 @@ variable "policy_file" {
   type        = string
   default     = null
 }
+
+variable "enable_website_configuration" {
+  description = "Enable S3 static website hosting configuration"
+  type        = bool
+  default     = false
+}
+
+variable "website_index_document" {
+  description = "Index document suffix for website hosting (e.g. index.html). Required if enable_website_configuration is true."
+  type        = string
+  default     = null
+}
+
+variable "s3_objects" {
+  description = "Map of S3 objects to upload to the bucket. Key is the object key, value is object config with: source, content_type (optional), cache_control (optional), content_disposition (optional)"
+  type = map(object({
+    source              = string
+    content_type        = optional(string)
+    cache_control       = optional(string)
+    content_disposition = optional(string)
+  }))
+  default = {}
+}
+
+variable "lifecycle_configuration" {
+  description = "Simple lifecycle configuration for common bucket cleanup use cases. Set to null to disable lifecycle configuration."
+  type = object({
+    id                                     = optional(string, "default")
+    prefix                                 = optional(string, "")
+    expiration_days                        = optional(number)
+    noncurrent_version_expiration_days     = optional(number)
+    abort_incomplete_multipart_upload_days = optional(number)
+  })
+  default = null
+
+  validation {
+    condition = var.lifecycle_configuration == null || (
+      try(var.lifecycle_configuration.expiration_days, null) != null ||
+      try(var.lifecycle_configuration.noncurrent_version_expiration_days, null) != null ||
+      try(var.lifecycle_configuration.abort_incomplete_multipart_upload_days, null) != null
+    )
+    error_message = "Set at least one of expiration_days, noncurrent_version_expiration_days, or abort_incomplete_multipart_upload_days when lifecycle_configuration is provided."
+  }
+}

@@ -25,7 +25,7 @@ resource "aws_efs_mount_target" "this" {
 
   file_system_id  = aws_efs_file_system.this[0].id
   subnet_id       = each.value
-  security_groups = null
+  security_groups = length(var.security_group_ids) > 0 ? var.security_group_ids : null
 }
 
 resource "aws_efs_backup_policy" "this" {
@@ -36,4 +36,36 @@ resource "aws_efs_backup_policy" "this" {
   backup_policy {
     status = var.backup_policy_status
   }
+}
+
+resource "aws_efs_access_point" "this" {
+  for_each = var.create ? { for ap in var.access_points : ap.name => ap } : {}
+
+  file_system_id = aws_efs_file_system.this[0].id
+
+  posix_user {
+    uid = each.value.posix_uid
+    gid = each.value.posix_gid
+  }
+
+  root_directory {
+    path = each.value.path
+
+    creation_info {
+      owner_uid   = each.value.owner_uid
+      owner_gid   = each.value.owner_gid
+      permissions = each.value.permissions
+    }
+  }
+
+  tags = merge(var.tags, {
+    Name = each.value.name
+  })
+}
+
+resource "aws_efs_file_system_policy" "this" {
+  count = var.create && var.enable_file_system_policy ? 1 : 0
+
+  file_system_id = aws_efs_file_system.this[0].id
+  policy         = var.efs_policy
 }

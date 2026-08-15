@@ -3,7 +3,18 @@ variable "tags" {
   default = {}
 }
 
-variable "opt_ec2_tags" {
+variable "ec2_tags" {
+  type    = map(string)
+  default = {}
+}
+
+variable "volume_tags" {
+  type    = map(string)
+  default = {}
+}
+
+
+variable "ebs_volume_tags" {
   type    = map(string)
   default = {}
 }
@@ -52,6 +63,12 @@ variable "ssh_user" {
 
 variable "user_data" {
   type = string
+}
+
+variable "volume_name" {
+  type        = string
+  description = "EC2 instance volume name"
+  default     = null
 }
 
 variable "volume_size" {
@@ -126,9 +143,28 @@ variable "metadata_http_tokens" {
   default     = "required"
 }
 
+variable "metadata_http_put_response_hop_limit" {
+  description = "The desired HTTP PUT response hop limit for instance metadata requests"
+  type        = number
+  default     = 1
+}
+
+variable "metadata_instance_metadata_tags" {
+  description = "Whether to enable instance metadata tags"
+  type        = string
+  default     = "disabled"
+}
+
 variable "key_name" {
   type        = string
   description = "Name of the EC2 key pair"
+  default     = null
+}
+
+variable "user_data_replace_on_change" {
+  type        = bool
+  description = "Whether changes to user_data force instance replacement"
+  default     = false
 }
 
 variable "instance_profile_name" {

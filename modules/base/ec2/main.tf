@@ -15,25 +15,35 @@ resource "aws_instance" "this" {
   iam_instance_profile        = try(aws_iam_instance_profile.this[0].name, null)
   vpc_security_group_ids      = var.security_group_ids
   user_data                   = var.user_data
+  user_data_replace_on_change = var.user_data_replace_on_change
 
   root_block_device {
     volume_size           = var.volume_size
     volume_type           = var.volume_type
     encrypted             = var.volume_encrypted
     delete_on_termination = var.volume_delete_on_termination
+
+    tags = merge(
+      var.tags,
+      var.volume_tags
+    )
   }
 
   metadata_options {
-    http_endpoint = var.metadata_http_endpoint
-    http_tokens   = var.metadata_http_tokens
+    http_endpoint               = var.metadata_http_endpoint
+    http_tokens                 = var.metadata_http_tokens
+    http_put_response_hop_limit = var.metadata_http_put_response_hop_limit
+    instance_metadata_tags      = var.metadata_instance_metadata_tags
   }
 
   tags = merge(
-    var.opt_ec2_tags,
+    var.ec2_tags,
     var.tags, {
       Name = var.name
     }
   )
+
+  depends_on = [aws_iam_instance_profile.this]
 }
 
 resource "aws_ebs_volume" "external" {
@@ -46,9 +56,7 @@ resource "aws_ebs_volume" "external" {
   iops              = var.external_volume_iops
   throughput        = var.external_volume_throughput
 
-  tags = merge(var.tags, {
-    Name = var.ebs_volume_name
-  })
+  tags = merge(var.tags, var.ebs_volume_tags)
 }
 
 resource "aws_volume_attachment" "external" {
@@ -57,4 +65,6 @@ resource "aws_volume_attachment" "external" {
   device_name = var.external_volume_device_name
   volume_id   = aws_ebs_volume.external[0].id
   instance_id = aws_instance.this.id
+
+  depends_on = [aws_instance.this]
 }

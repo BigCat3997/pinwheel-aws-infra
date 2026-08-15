@@ -48,10 +48,10 @@ variable "vpc_id" {
   type        = string
   default     = null
 
-#   validation {
-#     condition     = !(var.create_zone && var.private_zone && var.vpc_id == null)
-#     error_message = "vpc_id must be provided when create_zone = true and private_zone = true."
-#   }
+  #   validation {
+  #     condition     = !(var.create_zone && var.private_zone && var.vpc_id == null)
+  #     error_message = "vpc_id must be provided when create_zone = true and private_zone = true."
+  #   }
 }
 
 variable "vpc_region" {

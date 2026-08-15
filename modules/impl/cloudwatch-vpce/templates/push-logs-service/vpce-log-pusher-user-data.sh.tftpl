@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euxo pipefail
+
+cat > /opt/vpce-log-pusher.py <<'PY'
+${python_script}
+PY
+
+cat > /etc/systemd/system/vpce-log-pusher.service <<'UNIT'
+${service_unit}
+UNIT
+
+chmod 0755 /opt/vpce-log-pusher.py
+systemctl daemon-reload
+systemctl enable --now vpce-log-pusher.service
