@@ -123,16 +123,17 @@ variable "target_groups" {
 }
 
 variable "attachments" {
-  description = "Target group attachments"
+  description = "NLB target group attachments"
 
-  type = map(object({
+  type = list(object({
     target_group_name = string
+    target_name       = string
     target_id         = string
     port              = optional(number)
     availability_zone = optional(string)
   }))
 
-  default = {}
+  default = []
 }
 
 variable "enable_deletion_protection" {
