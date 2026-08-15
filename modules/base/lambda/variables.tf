@@ -37,6 +37,12 @@ variable "memory_size" {
   default     = 256
 }
 
+variable "reserved_concurrent_executions" {
+  description = "Maximum concurrent executions reserved for the function. Use -1 for no reservation."
+  type        = number
+  default     = -1
+}
+
 variable "subnet_ids" {
   description = "Subnet IDs for Lambda VPC configuration"
   type        = list(string)

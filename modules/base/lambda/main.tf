@@ -1,10 +1,11 @@
 resource "aws_lambda_function" "this" {
-  function_name = var.name
-  role          = var.role_arn
-  runtime       = var.runtime
-  handler       = var.handler
-  timeout       = var.timeout
-  memory_size   = var.memory_size
+  function_name                  = var.name
+  role                           = var.role_arn
+  runtime                        = var.runtime
+  handler                        = var.handler
+  timeout                        = var.timeout
+  memory_size                    = var.memory_size
+  reserved_concurrent_executions = var.reserved_concurrent_executions
 
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
