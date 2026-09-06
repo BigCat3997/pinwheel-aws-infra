@@ -55,6 +55,18 @@ variable "associate_public_ip" {
   default = false
 }
 
+variable "source_dest_check" {
+  description = "Whether the EC2 instance performs source/destination checks"
+  type        = bool
+  default     = true
+}
+
+variable "monitoring" {
+  description = "Whether to enable detailed (one-minute) CloudWatch monitoring"
+  type        = bool
+  default     = false
+}
+
 variable "ssh_user" {
   description = "Default SSH user for the EC2 instance"
   type        = string
@@ -170,6 +182,12 @@ variable "user_data_replace_on_change" {
 variable "instance_profile_name" {
   type        = string
   description = "Name for IAM instance profile created by this module"
+  default     = null
+}
+
+variable "iam_instance_profile_name" {
+  type        = string
+  description = "Name of an existing IAM instance profile to attach instead of creating one"
   default     = null
 }
 
