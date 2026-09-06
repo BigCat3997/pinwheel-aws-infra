@@ -3,12 +3,6 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "create_internet_gateway" {
-  description = "Whether to create an Internet Gateway"
-  type        = bool
-  default     = true
-}
-
 variable "name" {
   description = "Name tag for Internet Gateway"
   type        = string
