@@ -30,6 +30,51 @@ variable "enable_deletion_protection" {
   default = true
 }
 
+variable "enable_logging" {
+  type    = bool
+  default = false
+}
+
+variable "cloudwatch_log_group_arn" {
+  type        = string
+  default     = null
+  nullable    = true
+  description = "ARN of an existing CloudWatch log group that receives ALB vended logs. Logging is disabled when null."
+
+  validation {
+    condition     = var.cloudwatch_log_group_arn == null || can(regex("^arn:[^:]+:logs:[^:]+:[0-9]{12}:log-group:.+", var.cloudwatch_log_group_arn))
+    error_message = "cloudwatch_log_group_arn must be null or a valid CloudWatch log group ARN."
+  }
+}
+
+variable "cloudwatch_log_types" {
+  type        = set(string)
+  default     = ["ALB_ACCESS_LOGS"]
+  description = "ALB vended log types to deliver when cloudwatch_log_group_arn is set."
+
+  validation {
+    condition = length(var.cloudwatch_log_types) > 0 && alltrue([
+      for log_type in var.cloudwatch_log_types : contains([
+        "ALB_ACCESS_LOGS",
+        "ALB_CONNECTION_LOGS",
+        "ALB_HEALTH_CHECK_LOGS",
+      ], log_type)
+    ])
+    error_message = "cloudwatch_log_types must contain one or more of ALB_ACCESS_LOGS, ALB_CONNECTION_LOGS, or ALB_HEALTH_CHECK_LOGS."
+  }
+}
+
+variable "cloudwatch_log_output_format" {
+  type        = string
+  default     = "json"
+  description = "Output format used for ALB logs delivered to CloudWatch Logs."
+
+  validation {
+    condition     = contains(["json", "plain", "raw"], var.cloudwatch_log_output_format)
+    error_message = "cloudwatch_log_output_format must be json, plain, or raw."
+  }
+}
+
 variable "target_groups" {
   type = map(object({
     port        = number
@@ -83,10 +128,11 @@ variable "listeners" {
 }
 
 variable "attachments" {
-  type = map(object({
+  type = list(object({
     target_group_name = string
+    target_name       = string
     target_id         = string
     port              = optional(number)
   }))
-  default = {}
+  default = []
 }

@@ -21,3 +21,8 @@ output "target_group_arns" {
 output "listener_arns" {
   value = { for k, l in aws_lb_listener.this : k => l.arn }
 }
+
+output "cloudwatch_log_delivery_arns" {
+  description = "Map of CloudWatch log delivery ARNs keyed by ALB log type"
+  value       = { for log_type, delivery in aws_cloudwatch_log_delivery.this : log_type => delivery.arn }
+}
