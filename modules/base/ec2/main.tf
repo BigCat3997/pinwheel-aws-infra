@@ -11,8 +11,10 @@ resource "aws_instance" "this" {
   subnet_id                   = var.subnet_id
   private_ip                  = var.private_ip
   associate_public_ip_address = var.associate_public_ip
+  source_dest_check           = var.source_dest_check
+  monitoring                  = var.monitoring
   key_name                    = var.key_name
-  iam_instance_profile        = try(aws_iam_instance_profile.this[0].name, null)
+  iam_instance_profile        = var.iam_instance_profile_name != null ? var.iam_instance_profile_name : try(aws_iam_instance_profile.this[0].name, null)
   vpc_security_group_ids      = var.security_group_ids
   user_data                   = var.user_data
   user_data_replace_on_change = var.user_data_replace_on_change
