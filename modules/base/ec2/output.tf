@@ -14,6 +14,11 @@ output "private_ip" {
   value = aws_instance.this.private_ip
 }
 
+output "primary_network_interface_id" {
+  description = "ID of the instance primary network interface"
+  value       = aws_instance.this.primary_network_interface_id
+}
+
 output "external_volume_id" {
   description = "ID of the external EBS volume when created"
   value       = try(aws_ebs_volume.external[0].id, null)
@@ -37,8 +42,8 @@ output "ssh_private" {
 }
 
 output "instance_profile_name" {
-  description = "IAM instance profile name created by this module"
-  value       = try(aws_iam_instance_profile.this[0].name, null)
+  description = "Effective IAM instance profile name attached to the instance"
+  value       = var.iam_instance_profile_name != null ? var.iam_instance_profile_name : try(aws_iam_instance_profile.this[0].name, null)
 }
 
 output "role_name" {

@@ -17,6 +17,7 @@ variable "security_rules" {
     cidr_blocks       = optional(list(string))
     ipv6_cidr_blocks  = optional(list(string))
     security_group_id = optional(string)
+    self              = optional(bool)
     description       = optional(string)
   }))
   default = []
