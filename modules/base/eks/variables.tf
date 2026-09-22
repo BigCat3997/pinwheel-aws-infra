@@ -68,6 +68,19 @@ variable "node_groups" {
   default = []
 }
 
+variable "addons" {
+  description = "A list of EKS addons to install on the cluster."
+  type = list(object({
+    name                        = string
+    version                     = optional(string)
+    resolve_conflicts_on_create = optional(string, "OVERWRITE")
+    resolve_conflicts_on_update = optional(string, "OVERWRITE")
+    service_account_role_arn    = optional(string)
+    configuration_values        = optional(string)
+  }))
+  default = []
+}
+
 variable "tags" {
   description = "A map of tags to apply to all resources."
   type        = map(string)

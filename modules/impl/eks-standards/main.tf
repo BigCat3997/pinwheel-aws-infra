@@ -120,6 +120,7 @@ module "local_eks" {
   public_access_cidrs       = var.public_access_cidrs
   enabled_cluster_log_types = var.enabled_cluster_log_types
   node_groups               = var.node_groups
+  addons                    = var.eks_addons
   tags                      = var.tags
 
   depends_on = [

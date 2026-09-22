@@ -202,3 +202,16 @@ variable "node_groups" {
   }))
   default = []
 }
+
+variable "eks_addons" {
+  description = "A list of EKS addons to install on the cluster (e.g. vpc-cni, coredns, kube-proxy, aws-ebs-csi-driver)."
+  type = list(object({
+    name                        = string
+    version                     = optional(string)
+    resolve_conflicts_on_create = optional(string, "OVERWRITE")
+    resolve_conflicts_on_update = optional(string, "OVERWRITE")
+    service_account_role_arn    = optional(string)
+    configuration_values        = optional(string)
+  }))
+  default = []
+}

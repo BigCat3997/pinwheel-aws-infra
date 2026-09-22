@@ -33,3 +33,8 @@ output "cluster_oidc_issuer" {
   description = "The OIDC issuer URL for the EKS cluster (used for IRSA)."
   value       = aws_eks_cluster.this.identity[0].oidc[0].issuer
 }
+
+output "addon_arns" {
+  description = "Map of installed addon name to its ARN."
+  value       = { for name, addon in aws_eks_addon.this : name => addon.arn }
+}
