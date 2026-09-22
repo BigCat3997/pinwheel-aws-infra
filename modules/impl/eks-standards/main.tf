@@ -130,3 +130,53 @@ module "local_eks" {
     module.local_route_table_association,
   ]
 }
+
+resource "aws_iam_openid_connect_provider" "eks" {
+  url             = module.local_eks.cluster_oidc_issuer
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = []
+}
+
+module "local_ebs_csi_driver_role" {
+  source = "../../base/iam-role"
+
+  name        = var.ebs_csi_driver_role_name
+  description = "IRSA role for the EKS aws-ebs-csi-driver addon"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.eks.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${replace(module.local_eks.cluster_oidc_issuer, "https://", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+            "${replace(module.local_eks.cluster_oidc_issuer, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+  managed_policy_arns = [
+    "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy",
+  ]
+  tags = var.tags
+}
+
+# Created outside module.local_eks's own `addons` input to avoid a dependency
+# cycle: the IRSA role above needs module.local_eks.cluster_oidc_issuer, which
+# only exists once the cluster is created, so this addon can't be part of the
+# same module call that creates the cluster.
+resource "aws_eks_addon" "ebs_csi_driver" {
+  cluster_name                = module.local_eks.cluster_name
+  addon_name                  = "aws-ebs-csi-driver"
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+  service_account_role_arn    = module.local_ebs_csi_driver_role.role_arn
+  tags                        = var.tags
+
+  depends_on = [module.local_eks, module.local_ebs_csi_driver_role]
+}

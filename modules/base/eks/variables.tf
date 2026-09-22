@@ -64,6 +64,7 @@ variable "node_groups" {
     min_size        = number
     max_size        = number
     max_unavailable = optional(number, 1)
+    ami_type        = optional(string, "AL2023_x86_64_STANDARD")
   }))
   default = []
 }

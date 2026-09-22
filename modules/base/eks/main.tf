@@ -26,6 +26,7 @@ resource "aws_eks_node_group" "this" {
   instance_types  = each.value.instance_types
   capacity_type   = each.value.capacity_type
   disk_size       = each.value.disk_size
+  ami_type        = each.value.ami_type
 
   scaling_config {
     desired_size = each.value.desired_size
