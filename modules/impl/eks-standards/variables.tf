@@ -153,6 +153,11 @@ variable "node_role_name" {
   type        = string
 }
 
+variable "ebs_csi_driver_role_name" {
+  description = "The name of the IRSA IAM role used by the aws-ebs-csi-driver addon."
+  type        = string
+}
+
 # EKS Cluster
 variable "eks_cluster_name" {
   description = "The name of the EKS cluster."
@@ -199,6 +204,7 @@ variable "node_groups" {
     min_size        = number
     max_size        = number
     max_unavailable = optional(number, 1)
+    ami_type        = optional(string, "AL2023_x86_64_STANDARD")
   }))
   default = []
 }

@@ -98,21 +98,36 @@ flowchart LR
   routes --> eks
 
   eks --> node_groups_ready["Node groups ready"]
-  node_groups_ready --> addons["EKS addons<br/>(vpc-cni, coredns, kube-proxy, aws-ebs-csi-driver)"]
+  node_groups_ready --> addons["EKS addons<br/>(vpc-cni, coredns, kube-proxy)"]
 
   eks --> outputs["Cluster outputs<br/>(id, ARN, endpoint, CA data, OIDC issuer)"]
   addons --> outputs2["Addon outputs<br/>(addon_arns)"]
+
+  outputs --> oidc["OIDC provider<br/>(aws_iam_openid_connect_provider)"]
+  oidc --> ebs_role["EBS CSI driver IRSA role"]
+  ebs_role --> ebs_addon["aws-ebs-csi-driver addon<br/>(standalone aws_eks_addon)"]
 ```
 
 Terraform uses the base modules under `modules/base/` for each component. The
-EKS control plane, node groups, and addons are provisioned together by
+EKS control plane, node groups, and most addons are provisioned together by
 `modules/base/eks`, which depends on the private subnets and route table
 associations being in place before nodes can reach the NAT gateways for
 outbound access. Addons are applied after the managed node groups so that
-workloads such as `aws-ebs-csi-driver` have nodes to schedule onto; configure
-them via the `eks_addons` variable. The `dev` environment enables the VPC CNI's
-`enableNetworkPolicy` setting via `configuration_values`, so Kubernetes
-`NetworkPolicy` resources are enforced by the CNI itself.
+they have nodes to schedule onto; configure them via the `eks_addons`
+variable. The `dev` environment enables the VPC CNI's `enableNetworkPolicy`
+setting via `configuration_values`, so Kubernetes `NetworkPolicy` resources
+are enforced by the CNI itself.
+
+The `aws-ebs-csi-driver` addon is **not** part of `eks_addons` — it needs an
+IRSA (IAM Roles for Service Accounts) role scoped to its Kubernetes service
+account, and that role's trust policy needs the cluster's OIDC issuer URL,
+which only exists after the cluster itself is created. Passing that role's
+ARN through `module.local_eks`'s own `addons` input would create a dependency
+cycle (the module would depend on a resource that depends on the module's own
+output). Instead, `main.tf` creates the OIDC provider
+(`aws_iam_openid_connect_provider.eks`), the IRSA role
+(`module.local_ebs_csi_driver_role`), and a standalone `aws_eks_addon.ebs_csi_driver`
+resource after the cluster and node groups exist.
 
 ## Operator quick reference
 

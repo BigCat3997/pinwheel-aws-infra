@@ -7,6 +7,7 @@ resource "aws_autoscaling_group" "this" {
   health_check_type         = var.health_check_type
   health_check_grace_period = var.health_check_grace_period
   wait_for_capacity_timeout = var.wait_for_capacity_timeout
+  target_group_arns         = var.target_group_arns
 
   launch_template {
     id      = var.launch_template_id
