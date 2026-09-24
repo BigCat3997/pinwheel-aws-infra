@@ -48,6 +48,12 @@ variable "wait_for_capacity_timeout" {
   default     = "10m"
 }
 
+variable "target_group_arns" {
+  description = "ARNs of ALB/NLB target groups to attach the Auto Scaling Group to."
+  type        = list(string)
+  default     = []
+}
+
 variable "tags" {
   type    = map(string)
   default = {}
