@@ -82,9 +82,10 @@ module "kms" {
 module "bastion_key_pair" {
   source = "../../base/key-pair"
 
-  create = var.bastion_create_key_pair
-  name   = var.bastion_key_pair_name
-  tags   = var.tags
+  create     = var.bastion_create_key_pair
+  name       = var.bastion_key_pair_name
+  public_key = data.aws_secretsmanager_secret_version.bastion_ec2_public_key.secret_string
+  tags       = var.tags
 }
 
 module "bastion_ec2" {
@@ -112,8 +113,9 @@ module "app_ec2_key_pair" {
   source = "../../base/key-pair"
   create = var.app_ec2_create_key_pair
 
-  name = var.app_ec2_key_pair_name
-  tags = var.tags
+  name       = var.app_ec2_key_pair_name
+  public_key = data.aws_secretsmanager_secret_version.app_ec2_public_key.secret_string
+  tags       = var.tags
 }
 
 module "app_ec2" {
@@ -144,7 +146,9 @@ module "lt_ec2_key_pair" {
   source = "../../base/key-pair"
   create = var.create_lt_ec2_key_pair
   name   = var.lt_ec2_key_pair_name
-  tags   = var.tags
+
+  public_key = data.aws_secretsmanager_secret_version.lt_ec2_public_key.secret_string
+  tags       = var.tags
 }
 
 module "launch_template" {
@@ -164,6 +168,32 @@ module "launch_template" {
   tags = var.tags
 }
 
+module "nlb" {
+  source = "../../base/nlb"
+
+  name            = var.nlb_name
+  enable_public   = var.nlb_enable_public
+  subnet_mappings = local.subnet_mappings
+  listeners       = var.nlb_listeners
+  target_groups   = local.combined_nlb_target_groups
+  enable_logging  = var.nlb_enable_logging
+  tags            = var.tags
+}
+
+module "alb" {
+  source = "../../base/alb2"
+
+  name               = var.alb_name
+  enable_public      = var.alb_enable_public
+  vpc_id             = module.vpc.id
+  subnet_ids         = [for name in var.asg_subnet_names : module.subnet.private_subnets[name]]
+  security_group_ids = [for name in var.lt_security_group_names : module.sg[name].id]
+  target_groups      = var.alb_target_groups
+  listeners          = var.alb_listeners
+  enable_logging     = var.alb_enable_logging
+  tags               = var.tags
+}
+
 module "asg" {
   source                    = "../../base/asg"
   name                      = var.asg_name
@@ -177,76 +207,33 @@ module "asg" {
   health_check_type         = var.asg_health_check_type
   health_check_grace_period = var.asg_health_check_grace_period
   wait_for_capacity_timeout = var.asg_wait_for_capacity_timeout
+  target_group_arns = concat(
+    values(module.nlb.target_group_arns),
+    values(module.alb.target_group_arns),
+  )
 
   tags = var.tags
-}
-
-module "nlb" {
-  source = "../../base/nlb"
-
-  name                 = var.nlb_name
-  enable_public_access = var.nlb_enable_public_access
-  vpc_id               = module.vpc.id
-  subnet_mappings      = local.subnet_mappings
-  listener_port        = var.nlb_listener_port
-  listener_protocol    = var.nlb_listener_protocol
-  target_groups = [
-    {
-      name                   = var.nlb_target_group_name
-      port                   = var.nlb_target_port
-      protocol               = var.nlb_target_protocol
-      target_type            = var.nlb_target_type
-      enable_stickiness      = var.nlb_enable_stickiness
-      autoscaling_group_name = module.asg.name
-      target_ips             = var.nlb_target_ips
-    }
-  ]
-  tags = var.tags
-}
-
-module "alb" {
-  source                 = "../../base/alb"
-  name                   = var.alb_name
-  vpc_id                 = module.vpc.id
-  subnet_ids             = [for name in var.asg_subnet_names : module.subnet.private_subnets[name]]
-  security_group_ids     = [for name in var.lt_security_group_names : module.sg[name].id]
-  target_group_name      = var.alb_target_group_name
-  target_port            = var.alb_target_port
-  target_protocol        = var.alb_target_protocol
-  listener_port          = var.alb_listener_port
-  listener_protocol      = var.alb_listener_protocol
-  autoscaling_group_name = module.asg.name
-  tags                   = var.tags
 }
 
 module "secrets" {
   source = "../../base/secret"
 
+  resource_policy = templatefile("${path.module}/templates/secrets/secret-resource-policy.json.tftpl", {
+    user_arn = data.aws_caller_identity.current.arn
+  })
   kms_key_id = module.kms.id
   secrets = [
     {
-      name  = "${var.bastion_key_pair_name}-private-key"
-      value = module.bastion_key_pair.private_key_pem
+      name  = "ec2/${var.bastion_name}/ec2-user/public-key"
+      value = module.bastion_key_pair.public_key
     },
     {
-      name  = "${var.bastion_key_pair_name}-public-key"
-      value = module.bastion_key_pair.public_key_openssh
+      name  = "ec2/${var.app_ec2_name}/ec2-user/public-key"
+      value = module.app_ec2_key_pair.public_key
     },
     {
-      name  = "${var.app_ec2_key_pair_name}-private-key"
-      value = module.app_ec2_key_pair.private_key_pem
-    },
-    {
-      name  = "${var.app_ec2_key_pair_name}-public-key"
-      value = module.app_ec2_key_pair.public_key_openssh
-    },
-    {
-      name  = "${var.lt_ec2_key_pair_name}-private-key"
-      value = module.lt_ec2_key_pair.private_key_pem
-    },
-    {
-      name  = "${var.lt_ec2_key_pair_name}-public-key"
-      value = module.lt_ec2_key_pair.public_key_openssh
+      name  = "ec2/${var.lt_name}/ec2-user/public-key"
+      value = module.lt_ec2_key_pair.public_key
     }
   ]
 
