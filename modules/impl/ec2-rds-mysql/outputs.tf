@@ -57,3 +57,23 @@ output "aws_backup_schedule_expression" {
   description = "AWS Backup schedule expression"
   value       = var.aws_backup_schedule_expression
 }
+
+output "bastion_public_ip" {
+  description = "Bastion public IPv4 address"
+  value       = module.local_bastion_ec2.public_ip
+}
+
+output "ssh_bastion_ec2" {
+  description = "SSH command for the bastion"
+  value       = module.local_bastion_ec2.ssh_public
+}
+
+output "app_ec2_private_ip" {
+  description = "App instance private IPv4 address"
+  value       = module.local_app_ec2.private_ip
+}
+
+output "ssh_app_ec2" {
+  description = "SSH command for the app instance (run from the bastion)"
+  value       = module.local_app_ec2.ssh_private
+}
