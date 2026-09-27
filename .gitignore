@@ -41,3 +41,6 @@ local-data.json
 
 # lambda function zip files
 *.zip
+
+# python
+__pycache__
