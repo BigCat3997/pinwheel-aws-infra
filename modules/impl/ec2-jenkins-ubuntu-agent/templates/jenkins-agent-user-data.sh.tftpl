@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+exec > >(tee -a /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y ca-certificates curl docker.io git jq openjdk-21-jre-headless unzip
+
+systemctl enable --now docker
+
+case "$(uname -m)" in
+  x86_64)
+    awscli_arch="x86_64"
+    terraform_arch="amd64"
+    ;;
+  aarch64 | arm64)
+    awscli_arch="aarch64"
+    terraform_arch="arm64"
+    ;;
+  *)
+    echo "Unsupported CPU architecture: $(uname -m)" >&2
+    exit 1
+    ;;
+esac
+
+if ! command -v aws >/dev/null 2>&1; then
+  work_dir="$(mktemp -d)"
+  curl --fail --location --silent --show-error \
+    "https://awscli.amazonaws.com/awscli-exe-linux-$awscli_arch.zip" \
+    --output "$work_dir/awscliv2.zip"
+  unzip -q "$work_dir/awscliv2.zip" -d "$work_dir"
+  "$work_dir/aws/install"
+  rm -rf "$work_dir"
+fi
+
+if ! command -v terraform >/dev/null 2>&1; then
+  work_dir="$(mktemp -d)"
+  curl --fail --location --silent --show-error \
+    "https://releases.hashicorp.com/terraform/${terraform_version}/terraform_${terraform_version}_linux_$terraform_arch.zip" \
+    --output "$work_dir/terraform.zip"
+  unzip -q "$work_dir/terraform.zip" -d "$work_dir"
+  install -m 0755 "$work_dir/terraform" /usr/local/bin/terraform
+  rm -rf "$work_dir"
+fi
+
+if ! id "${agent_user}" >/dev/null 2>&1; then
+  echo "Configured agent user does not exist: ${agent_user}" >&2
+  exit 1
+fi
+
+install -d -o "${agent_user}" -g "${agent_user}" /opt/jenkins
+usermod -aG docker "${agent_user}"
+
+java -version
+git --version
+aws --version
+terraform version
