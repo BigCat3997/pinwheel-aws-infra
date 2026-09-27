@@ -54,3 +54,21 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "processing_lambda_arn" {
+  description = "ARN of a Lambda function used to transform records before delivery (null disables transformation)"
+  type        = string
+  default     = null
+}
+
+variable "processing_buffer_size" {
+  description = "Buffer size in MBs before invoking the processing Lambda (1-3)"
+  type        = number
+  default     = 3
+}
+
+variable "processing_buffer_interval" {
+  description = "Buffer interval in seconds before invoking the processing Lambda (0-900)"
+  type        = number
+  default     = 60
+}
