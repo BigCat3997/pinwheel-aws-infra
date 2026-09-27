@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+exec > >(tee -a /var/log/user-data.log | logger -t user-data -s 2>/dev/console) 2>&1
+
+config_dir="/opt/aws/amazon-cloudwatch-agent/etc"
+config_file="$${config_dir}/cloudwatch-agent.json"
+install -d -m 0755 "$${config_dir}"
+printf '%s' '${cloudwatch_agent_config_base64}' | base64 --decode > "$${config_file}"
+chmod 0644 "$${config_file}"
+test -s "$${config_file}"
+echo "Created CloudWatch Agent configuration at $${config_file}"
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y ca-certificates curl uuid-runtime
+
+case "$(dpkg --print-architecture)" in
+  amd64) agent_arch="amd64" ;;
+  arm64) agent_arch="arm64" ;;
+  *)
+    echo "Unsupported architecture: $(dpkg --print-architecture)" >&2
+    exit 1
+    ;;
+esac
+
+agent_package="/tmp/amazon-cloudwatch-agent.deb"
+curl --fail --location --retry 5 \
+  "https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/$${agent_arch}/latest/amazon-cloudwatch-agent.deb" \
+  --output "$${agent_package}"
+dpkg --install "$${agent_package}"
+
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config \
+  -m ec2 \
+  -s \
+  -c "file:$${config_file}"
+
+install -d -m 0755 /var/log/app
+%{ for path in simulated_log_paths ~}
+install -m 0644 /dev/null "${path}"
+%{ endfor ~}
+
+cat > /usr/local/bin/simulate-services <<'SIMULATE_SCRIPT'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+paths=(
+%{ for path in simulated_log_paths ~}
+  "${path}"
+%{ endfor ~}
+)
+
+timestamp="$(date -u +'%Y-%m-%d %H:%M:%S')"
+for log_path in "$${paths[@]}"; do
+  service_name="$(basename "$${log_path}" .log)"
+  printf '%s [INFO] %s heartbeat ok, request_id=%s\n' \
+    "$${timestamp}" "$${service_name}" "$(uuidgen)" >> "$${log_path}"
+done
+SIMULATE_SCRIPT
+chmod 0755 /usr/local/bin/simulate-services
+
+cat > /etc/systemd/system/simulate-services.service <<'SIMULATE_SERVICE'
+[Unit]
+Description=Append a simulated log line to each service's log file
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/simulate-services
+SIMULATE_SERVICE
+
+cat > /etc/systemd/system/simulate-services.timer <<SIMULATE_TIMER
+[Unit]
+Description=Run simulate-services every ${log_simulation_interval_seconds} seconds
+
+[Timer]
+OnBootSec=10s
+OnUnitActiveSec=${log_simulation_interval_seconds}s
+AccuracySec=1s
+Unit=simulate-services.service
+
+[Install]
+WantedBy=timers.target
+SIMULATE_TIMER
+
+systemctl daemon-reload
+systemctl enable --now simulate-services.timer
+systemctl start simulate-services.service
