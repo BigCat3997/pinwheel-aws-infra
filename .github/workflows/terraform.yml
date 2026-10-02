@@ -1,0 +1,68 @@
+name: Terraform
+
+on:
+  pull_request:
+    paths:
+      - "modules/**"
+      - ".github/workflows/terraform.yml"
+  push:
+    branches: [main, develop]
+    paths:
+      - "modules/**"
+      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  discover:
+    name: Discover modules
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.find.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: find
+        # Every directory under modules/base and modules/impl that has .tf files.
+        # Skips "@tmp" scratch folders and any .terraform cache directories.
+        run: |
+          modules=$(find modules/base modules/impl -type f -name '*.tf' \
+            -not -path '*/.terraform/*' -not -path '*@tmp*' -exec dirname {} \; \
+            | sort -u | jq -R . | jq -sc .)
+          echo "modules=$modules" >> "$GITHUB_OUTPUT"
+          echo "$modules" | jq .
+
+  fmt:
+    name: terraform fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive -diff modules
+
+  validate:
+    name: validate (${{ matrix.module }})
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ${{ fromJson(needs.discover.outputs.modules) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: terraform init
+        working-directory: ${{ matrix.module }}
+        run: terraform init -backend=false -input=false
+
+      - name: terraform validate
+        working-directory: ${{ matrix.module }}
+        run: terraform validate
