@@ -77,3 +77,23 @@ output "ssh_app_ec2" {
   description = "SSH command for the app instance (run from the bastion)"
   value       = module.local_app_ec2.ssh_private
 }
+
+output "sqlserver_id" {
+  description = "SQL Server RDS instance id"
+  value       = module.local_sqlserver.id
+}
+
+output "sqlserver_arn" {
+  description = "SQL Server RDS instance arn"
+  value       = module.local_sqlserver.arn
+}
+
+output "sqlserver_endpoint" {
+  description = "SQL Server RDS endpoint"
+  value       = module.local_sqlserver.endpoint
+}
+
+output "sqlserver_port" {
+  description = "SQL Server RDS port"
+  value       = module.local_sqlserver.port
+}

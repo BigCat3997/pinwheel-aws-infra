@@ -286,6 +286,13 @@ module "local_bastion_ec2" {
   volume_type                  = var.ec2_volume_type
   volume_encrypted             = var.ec2_volume_encrypted
   volume_delete_on_termination = true
+  volume_tags                  = var.bastion_ec2_volume_tags
+  create_external_volume       = var.bastion_create_external_volume
+  external_volume_size         = var.bastion_external_volume_size
+  external_volume_type         = var.bastion_external_volume_type
+  external_volume_encrypted    = var.bastion_external_volume_encrypted
+  external_volume_device_name  = var.bastion_external_volume_device_name
+  ebs_volume_tags              = var.bastion_external_volume_tags
   key_name                     = module.local_bastion_key_pair.name
   tags                         = var.tags
 
@@ -316,6 +323,7 @@ module "local_app_ec2" {
   volume_type                  = var.ec2_volume_type
   volume_encrypted             = var.ec2_volume_encrypted
   volume_delete_on_termination = true
+  volume_tags                  = var.app_ec2_volume_tags
   key_name                     = module.local_app_key_pair.name
   tags                         = var.tags
 }
@@ -339,4 +347,71 @@ module "local_ec2_secrets" {
   })
   kms_key_id = module.local_kms.id
   tags       = var.tags
+}
+
+module "local_sqlserver_sg" {
+  source = "../../base/sg"
+
+  name   = var.sqlserver_sg_name
+  vpc_id = module.local_vpc.id
+
+  security_rules = [
+    {
+      from_port   = var.sqlserver_port
+      to_port     = var.sqlserver_port
+      protocol    = "tcp"
+      cidr_blocks = var.sqlserver_ingress_cidrs
+      description = "SQL Server ingress"
+    }
+  ]
+
+  egress_rules = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "Allow all outbound"
+    }
+  ]
+
+  tags = var.tags
+}
+
+module "local_sqlserver" {
+  source = "../../base/rds"
+
+  identifier                  = var.sqlserver_identifier
+  engine                      = var.sqlserver_engine
+  engine_version              = var.sqlserver_engine_version
+  license_model               = var.sqlserver_license_model
+  instance_class              = var.sqlserver_instance_class
+  allocated_storage           = var.sqlserver_allocated_storage
+  max_allocated_storage       = var.sqlserver_max_allocated_storage
+  storage_type                = var.sqlserver_storage_type
+  storage_encrypted           = var.sqlserver_storage_encrypted
+  kms_key_id                  = var.kms_key_id
+  primary_database_name       = "master"
+  secondary_database_name     = "secondary"
+  master_username             = var.sqlserver_master_username
+  manage_master_user_password = var.sqlserver_manage_master_user_password
+  port                        = var.sqlserver_port
+
+  create_db_subnet_group     = true
+  db_subnet_group_subnet_ids = [for name in var.db_subnet_names : module.local_subnet.private_subnets[name]]
+  vpc_security_group_ids     = [module.local_sqlserver_sg.id]
+
+  multi_az            = var.sqlserver_multi_az
+  publicly_accessible = var.sqlserver_publicly_accessible
+
+  backup_retention_period = var.sqlserver_automated_backup_retention_days
+  backup_window           = var.sqlserver_automated_backup_window
+
+  enabled_cloudwatch_logs_exports = var.sqlserver_cloudwatch_logs_exports
+
+  bootstrap_enabled = false
+
+  tags = var.tags
+
+  depends_on = [module.local_subnet, module.local_sqlserver_sg]
 }

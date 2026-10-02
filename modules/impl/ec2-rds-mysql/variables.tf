@@ -135,6 +135,118 @@ variable "automated_backup_window" {
   default     = "00:00-00:30"
 }
 
+variable "sqlserver_sg_name" {
+  description = "SQL Server RDS security group name"
+  type        = string
+}
+
+variable "sqlserver_ingress_cidrs" {
+  description = "Allowed CIDR blocks for SQL Server ingress"
+  type        = list(string)
+  default     = ["10.0.0.0/8"]
+}
+
+variable "sqlserver_identifier" {
+  description = "SQL Server RDS instance identifier"
+  type        = string
+}
+
+variable "sqlserver_engine" {
+  description = "SQL Server engine edition (e.g. sqlserver-ex, sqlserver-web, sqlserver-se, sqlserver-ee)"
+  type        = string
+  default     = "sqlserver-ex"
+}
+
+variable "sqlserver_engine_version" {
+  description = "SQL Server engine version"
+  type        = string
+  default     = "15.00"
+}
+
+variable "sqlserver_license_model" {
+  description = "License model for the SQL Server engine"
+  type        = string
+  default     = "license-included"
+}
+
+variable "sqlserver_instance_class" {
+  description = "SQL Server RDS instance class"
+  type        = string
+  default     = "db.t3.small"
+}
+
+variable "sqlserver_allocated_storage" {
+  description = "Allocated storage GiB for SQL Server"
+  type        = number
+  default     = 20
+}
+
+variable "sqlserver_max_allocated_storage" {
+  description = "Max autoscaled storage GiB for SQL Server"
+  type        = number
+  default     = 100
+}
+
+variable "sqlserver_storage_type" {
+  description = "Storage type for SQL Server"
+  type        = string
+  default     = "gp3"
+}
+
+variable "sqlserver_storage_encrypted" {
+  description = "Enable storage encryption for SQL Server"
+  type        = bool
+  default     = true
+}
+
+variable "sqlserver_master_username" {
+  description = "Master username for SQL Server"
+  type        = string
+  default     = "admin"
+}
+
+variable "sqlserver_manage_master_user_password" {
+  description = "Whether to let RDS manage the SQL Server master user password in Secrets Manager"
+  type        = bool
+  default     = true
+}
+
+variable "sqlserver_port" {
+  description = "SQL Server port"
+  type        = number
+  default     = 1433
+}
+
+variable "sqlserver_cloudwatch_logs_exports" {
+  description = "SQL Server log types to publish to CloudWatch Logs (supported: agent, error)"
+  type        = list(string)
+  default     = ["error"]
+}
+
+variable "sqlserver_multi_az" {
+  description = "Enable Multi-AZ for SQL Server"
+  type        = bool
+  default     = false
+}
+
+variable "sqlserver_publicly_accessible" {
+  description = "Whether the SQL Server RDS instance is publicly accessible"
+  type        = bool
+  default     = false
+}
+
+variable "sqlserver_automated_backup_retention_days" {
+  description = "Retention days for SQL Server automated backups"
+  type        = number
+  default     = 7
+}
+
+variable "sqlserver_automated_backup_window" {
+  description = "SQL Server automated backup window in UTC"
+  type        = string
+  default     = "00:00-00:30"
+}
+
 variable "create_aws_backup" {
   description = "Whether to create AWS Backup resources for second backup"
   type        = bool
@@ -259,6 +371,18 @@ variable "ec2_volume_encrypted" {
   default     = true
 }
 
+variable "bastion_ec2_volume_tags" {
+  description = "Tags applied to the bastion EC2 root volume"
+  type        = map(string)
+  default     = {}
+}
+
+variable "app_ec2_volume_tags" {
+  description = "Tags applied to the app EC2 root volume"
+  type        = map(string)
+  default     = {}
+}
+
 variable "bastion_sg_name" {
   description = "Bastion security group name"
   type        = string
@@ -344,4 +468,40 @@ variable "app_key_pair_name" {
 variable "app_ec2_public_key_secret_name" {
   description = "Name of the existing Secrets Manager secret holding the app OpenSSH public key"
   type        = string
+}
+
+variable "bastion_create_external_volume" {
+  description = "Whether to create and attach an external EBS volume to the bastion EC2"
+  type        = bool
+  default     = true
+}
+
+variable "bastion_external_volume_size" {
+  description = "Size (GiB) of the bastion external EBS volume"
+  type        = number
+  default     = 20
+}
+
+variable "bastion_external_volume_type" {
+  description = "Type of the bastion external EBS volume"
+  type        = string
+  default     = "gp3"
+}
+
+variable "bastion_external_volume_encrypted" {
+  description = "Whether the bastion external EBS volume is encrypted"
+  type        = bool
+  default     = true
+}
+
+variable "bastion_external_volume_device_name" {
+  description = "Device name for the bastion external EBS volume"
+  type        = string
+  default     = "/dev/sdf"
+}
+
+variable "bastion_external_volume_tags" {
+  description = "Tags applied to the bastion external EBS volume"
+  type        = map(string)
+  default     = {}
 }
