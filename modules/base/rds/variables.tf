@@ -15,6 +15,12 @@ variable "engine_version" {
   default     = "8.0"
 }
 
+variable "license_model" {
+  description = "License model for the engine (e.g. license-included, required for RDS SQL Server). Leave null to use the AWS default for the engine"
+  type        = string
+  default     = null
+}
+
 variable "instance_class" {
   description = "RDS instance class"
   type        = string

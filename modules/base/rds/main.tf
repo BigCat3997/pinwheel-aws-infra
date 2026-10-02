@@ -38,10 +38,11 @@ resource "aws_db_instance" "this" {
   storage_encrypted     = var.storage_encrypted
   kms_key_id            = var.kms_key_id
 
-  db_name  = var.primary_database_name
-  username = var.master_username
-  password = var.master_password
-  port     = var.port
+  db_name       = local.effective_db_name
+  username      = var.master_username
+  password      = var.master_password
+  port          = var.port
+  license_model = var.license_model
 
   db_subnet_group_name   = local.effective_db_subnet_group_name
   vpc_security_group_ids = var.vpc_security_group_ids
@@ -108,10 +109,11 @@ resource "aws_db_instance" "this_managed" {
   storage_encrypted     = var.storage_encrypted
   kms_key_id            = var.kms_key_id
 
-  db_name                     = var.primary_database_name
+  db_name                     = local.effective_db_name
   username                    = var.master_username
   manage_master_user_password = true
   port                        = var.port
+  license_model               = var.license_model
   db_subnet_group_name        = local.effective_db_subnet_group_name
   vpc_security_group_ids      = var.vpc_security_group_ids
   multi_az                    = var.multi_az
