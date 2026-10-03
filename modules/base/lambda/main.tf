@@ -42,3 +42,14 @@ resource "aws_lambda_permission" "function_url" {
   principal              = "*"
   function_url_auth_type = "NONE"
 }
+
+resource "aws_lambda_permission" "alb_invoke" {
+  # Keys must be static (known at plan); values may be unknown target group ARNs.
+  for_each = var.alb_invoke_target_group_arns
+
+  statement_id  = "AllowExecutionFromALB-${each.key}"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.this.function_name
+  principal     = "elasticloadbalancing.amazonaws.com"
+  source_arn    = each.value
+}

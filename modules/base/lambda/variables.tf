@@ -101,3 +101,9 @@ variable "create_function_url" {
   type        = bool
   default     = false
 }
+
+variable "alb_invoke_target_group_arns" {
+  description = "Map of static key => ALB Lambda target group ARN allowed to invoke this function"
+  type        = map(string)
+  default     = {}
+}

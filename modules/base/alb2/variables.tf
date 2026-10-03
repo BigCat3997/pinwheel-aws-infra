@@ -77,8 +77,8 @@ variable "cloudwatch_log_output_format" {
 
 variable "target_groups" {
   type = map(object({
-    port        = number
-    protocol    = string
+    port        = optional(number)
+    protocol    = optional(string)
     target_type = optional(string, "instance")
     health_check = optional(object({
       enabled             = optional(bool, true)
@@ -102,9 +102,10 @@ variable "target_groups" {
 
   validation {
     condition = alltrue([
-      for tg in var.target_groups : contains(["HTTP", "HTTPS"], tg.protocol)
+      for tg in var.target_groups :
+      tg.target_type == "lambda" ? (tg.port == null && tg.protocol == null) : (tg.port != null && contains(["HTTP", "HTTPS"], coalesce(tg.protocol, "")))
     ])
-    error_message = "ALB target group protocol must be HTTP or HTTPS."
+    error_message = "Instance/IP target groups need a port and an HTTP or HTTPS protocol; lambda target groups must not set port or protocol."
   }
 }
 
@@ -135,4 +136,15 @@ variable "attachments" {
     port              = optional(number)
   }))
   default = []
+}
+
+variable "listener_rules" {
+  description = "Listener rules forwarding matching paths to a target group, keyed by a static name"
+  type = map(object({
+    listener_name     = string
+    priority          = number
+    target_group_name = string
+    path_patterns     = list(string)
+  }))
+  default = {}
 }
