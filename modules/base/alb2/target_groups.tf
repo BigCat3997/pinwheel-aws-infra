@@ -4,8 +4,10 @@ resource "aws_lb_target_group" "this" {
   port                 = each.value.port
   protocol             = each.value.protocol
   target_type          = each.value.target_type
-  vpc_id               = var.vpc_id
-  deregistration_delay = each.value.deregistration_delay
+  vpc_id               = each.value.target_type == "lambda" ? null : var.vpc_id
+  deregistration_delay = each.value.target_type == "lambda" ? null : each.value.deregistration_delay
+
+  lambda_multi_value_headers_enabled = each.value.target_type == "lambda" ? false : null
 
   dynamic "health_check" {
     for_each = each.value.health_check != null ? [each.value.health_check] : []

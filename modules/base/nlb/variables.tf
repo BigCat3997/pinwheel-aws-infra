@@ -17,10 +17,6 @@ variable "enable_public" {
   default = false
 }
 
-variable "vpc_id" {
-  type = string
-}
-
 variable "subnet_ids" {
   type    = set(string)
   default = []
@@ -37,17 +33,6 @@ variable "subnet_mappings" {
 
 variable "security_group_ids" {
   type    = set(string)
-  default = []
-}
-
-variable "target_groups_attachments" {
-  type = list(object({
-    target_group_name  = string
-    target_port        = number
-    target_type        = optional(string, "instance")
-    target_ip          = optional(string, null)
-    target_instance_id = optional(string, null)
-  }))
   default = []
 }
 
@@ -139,4 +124,46 @@ variable "attachments" {
 variable "enable_deletion_protection" {
   type    = bool
   default = true
+}
+
+variable "enable_logging" {
+  description = "Whether to deliver NLB access logs to CloudWatch Logs."
+  type        = bool
+  default     = false
+}
+
+variable "cloudwatch_log_group_arn" {
+  description = "ARN of an existing CloudWatch log group that receives NLB vended logs."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition     = var.cloudwatch_log_group_arn == null || can(regex("^arn:[^:]+:logs:[^:]+:[0-9]{12}:log-group:.+", var.cloudwatch_log_group_arn))
+    error_message = "cloudwatch_log_group_arn must be null or a valid CloudWatch log group ARN."
+  }
+}
+
+variable "cloudwatch_log_types" {
+  description = "NLB vended log types to deliver when logging is enabled."
+  type        = set(string)
+  default     = ["NLB_ACCESS_LOGS"]
+
+  validation {
+    condition = length(var.cloudwatch_log_types) > 0 && alltrue([
+      for log_type in var.cloudwatch_log_types : log_type == "NLB_ACCESS_LOGS"
+    ])
+    error_message = "cloudwatch_log_types must contain NLB_ACCESS_LOGS."
+  }
+}
+
+variable "cloudwatch_log_output_format" {
+  description = "Output format used for NLB logs delivered to CloudWatch Logs."
+  type        = string
+  default     = "json"
+
+  validation {
+    condition     = contains(["json", "plain", "raw"], var.cloudwatch_log_output_format)
+    error_message = "cloudwatch_log_output_format must be json, plain, or raw."
+  }
 }

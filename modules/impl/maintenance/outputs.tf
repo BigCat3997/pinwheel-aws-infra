@@ -1,11 +1,11 @@
 output "alb_dns_name" {
   description = "DNS name of the ALB entrypoint"
-  value       = module.local_alb.dns_name
+  value       = module.alb.dns_name
 }
 
 output "application_url" {
   description = "Browser URL for the application or maintenance page"
-  value       = "http://${module.local_alb.dns_name}"
+  value       = "http://${module.alb.dns_name}"
 }
 
 output "active_route" {

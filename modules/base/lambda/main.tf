@@ -1,10 +1,11 @@
 resource "aws_lambda_function" "this" {
-  function_name = var.name
-  role          = var.role_arn
-  runtime       = var.runtime
-  handler       = var.handler
-  timeout       = var.timeout
-  memory_size   = var.memory_size
+  function_name                  = var.name
+  role                           = var.role_arn
+  runtime                        = var.runtime
+  handler                        = var.handler
+  timeout                        = var.timeout
+  memory_size                    = var.memory_size
+  reserved_concurrent_executions = var.reserved_concurrent_executions
 
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
@@ -40,4 +41,15 @@ resource "aws_lambda_permission" "function_url" {
   function_name          = aws_lambda_function.this.function_name
   principal              = "*"
   function_url_auth_type = "NONE"
+}
+
+resource "aws_lambda_permission" "alb_invoke" {
+  # Keys must be static (known at plan); values may be unknown target group ARNs.
+  for_each = var.alb_invoke_target_group_arns
+
+  statement_id  = "AllowExecutionFromALB-${each.key}"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.this.function_name
+  principal     = "elasticloadbalancing.amazonaws.com"
+  source_arn    = each.value
 }

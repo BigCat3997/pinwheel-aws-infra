@@ -26,6 +26,7 @@ resource "aws_eks_node_group" "this" {
   instance_types  = each.value.instance_types
   capacity_type   = each.value.capacity_type
   disk_size       = each.value.disk_size
+  ami_type        = each.value.ami_type
 
   scaling_config {
     desired_size = each.value.desired_size
@@ -38,4 +39,20 @@ resource "aws_eks_node_group" "this" {
   }
 
   tags = var.tags
+}
+
+resource "aws_eks_addon" "this" {
+  for_each = { for addon in var.addons : addon.name => addon }
+
+  cluster_name                = aws_eks_cluster.this.name
+  addon_name                  = each.value.name
+  addon_version               = each.value.version
+  resolve_conflicts_on_create = each.value.resolve_conflicts_on_create
+  resolve_conflicts_on_update = each.value.resolve_conflicts_on_update
+  service_account_role_arn    = each.value.service_account_role_arn
+  configuration_values        = each.value.configuration_values
+
+  tags = var.tags
+
+  depends_on = [aws_eks_node_group.this]
 }

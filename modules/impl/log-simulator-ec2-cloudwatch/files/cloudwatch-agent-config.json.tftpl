@@ -1,0 +1,22 @@
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "root"
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+%{ for entry in log_entries ~}
+          {
+            "file_path": "${entry.path}",
+            "log_group_name": "${log_group_name}",
+            "log_stream_name": "{instance_id}-${entry.stream}",
+            "timestamp_format": "%Y-%m-%d %H:%M:%S"
+          }%{ if entry.path != log_entries[length(log_entries) - 1].path },%{ endif }
+%{ endfor ~}
+        ]
+      }
+    }
+  }
+}

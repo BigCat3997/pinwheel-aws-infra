@@ -64,6 +64,20 @@ variable "node_groups" {
     min_size        = number
     max_size        = number
     max_unavailable = optional(number, 1)
+    ami_type        = optional(string, "AL2023_x86_64_STANDARD")
+  }))
+  default = []
+}
+
+variable "addons" {
+  description = "A list of EKS addons to install on the cluster."
+  type = list(object({
+    name                        = string
+    version                     = optional(string)
+    resolve_conflicts_on_create = optional(string, "OVERWRITE")
+    resolve_conflicts_on_update = optional(string, "OVERWRITE")
+    service_account_role_arn    = optional(string)
+    configuration_values        = optional(string)
   }))
   default = []
 }

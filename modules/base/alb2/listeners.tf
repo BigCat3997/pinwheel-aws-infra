@@ -13,3 +13,23 @@ resource "aws_lb_listener" "this" {
 
   depends_on = [aws_lb.this]
 }
+
+resource "aws_lb_listener_rule" "this" {
+  for_each = var.listener_rules
+
+  listener_arn = aws_lb_listener.this[each.value.listener_name].arn
+  priority     = each.value.priority
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.this[each.value.target_group_name].arn
+  }
+
+  condition {
+    path_pattern {
+      values = each.value.path_patterns
+    }
+  }
+
+  depends_on = [aws_lb_target_group_attachment.this]
+}

@@ -37,6 +37,12 @@ variable "memory_size" {
   default     = 256
 }
 
+variable "reserved_concurrent_executions" {
+  description = "Maximum concurrent executions reserved for the function. Use -1 for no reservation."
+  type        = number
+  default     = -1
+}
+
 variable "subnet_ids" {
   description = "Subnet IDs for Lambda VPC configuration"
   type        = list(string)
@@ -94,4 +100,10 @@ variable "create_function_url" {
   description = "Whether to create a public Lambda Function URL (authorization type NONE)"
   type        = bool
   default     = false
+}
+
+variable "alb_invoke_target_group_arns" {
+  description = "Map of static key => ALB Lambda target group ARN allowed to invoke this function"
+  type        = map(string)
+  default     = {}
 }

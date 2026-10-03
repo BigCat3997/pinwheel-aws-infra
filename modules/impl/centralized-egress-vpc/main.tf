@@ -213,19 +213,19 @@ resource "aws_ec2_transit_gateway_route" "internet_via_shared_vpc" {
 module "bastion_key_pair" {
   source = "../../base/key-pair"
 
-  create          = var.bastion_create_key_pair
-  name            = var.bastion_key_pair_name
+  create = var.bastion_create_key_pair
+  name   = var.bastion_key_pair_name
   # public_key_path = var.bastion_public_key_path
-  tags            = var.tags
+  tags = var.tags
 }
 
 module "app_ec2_key_pair" {
   source = "../../base/key-pair"
 
-  create          = var.app_ec2_create_key_pair
-  name            = var.app_ec2_key_pair_name
+  create = var.app_ec2_create_key_pair
+  name   = var.app_ec2_key_pair_name
   # public_key_path = var.app_ec2_public_key_path
-  tags            = var.tags
+  tags = var.tags
 }
 
 module "bastion_sg" {

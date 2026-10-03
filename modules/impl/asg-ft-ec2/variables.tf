@@ -125,10 +125,11 @@ variable "bastion_key_pair_name" {
   description = "Name of the key pair for the bastion EC2 instance"
 }
 
-# variable "bastion_public_key_path" {
-#   type        = string
-#   description = "Path to the public key for the bastion EC2 instance"
-# }
+variable "bastion_ec2_public_key_secret_name" {
+  type        = string
+  description = "Secrets Manager secret name holding the public key for the bastion EC2 key pair"
+  default     = null
+}
 
 variable "bastion_name" {
   type        = string
@@ -215,6 +216,12 @@ variable "app_ec2_key_pair_name" {
   description = "Name of the key pair for the EC2 instance"
 }
 
+variable "app_ec2_public_key_secret_name" {
+  type        = string
+  description = "Secrets Manager secret name holding the public key for the app EC2 key pair"
+  default     = null
+}
+
 variable "app_ec2_name" {
   type        = string
   description = "EC2 instance name"
@@ -283,6 +290,12 @@ variable "create_lt_ec2_key_pair" {
 variable "lt_ec2_key_pair_name" {
   description = "Prefix for launch template name"
   type        = string
+}
+
+variable "lt_ec2_public_key_secret_name" {
+  type        = string
+  description = "Secrets Manager secret name holding the public key for the launch template EC2 key pair"
+  default     = null
 }
 
 variable "lt_user_data" {
@@ -397,57 +410,71 @@ variable "nlb_name" {
   type        = string
 }
 
-variable "nlb_enable_public_access" {
+variable "nlb_enable_public" {
   description = "Whether to enable public access for the NLB"
   type        = bool
   default     = false
 }
 
-variable "nlb_target_group_name" {
-  description = "Name for the NLB target group"
-  type        = string
-  default     = "nlb-tg"
+variable "nlb_enable_logging" {
+  description = "Whether to deliver NLB access logs to CloudWatch Logs"
+  type        = bool
+  default     = false
 }
 
-variable "nlb_target_port" {
-  description = "Target port for NLB target group"
-  type        = number
-  default     = 8080
+variable "nlb_target_groups" {
+  description = "NLB target groups"
+  type = map(object({
+    protocol    = string
+    port        = number
+    target_type = optional(string, "instance")
+    health_check = optional(object({
+      enabled             = optional(bool, true)
+      protocol            = optional(string, "TCP")
+      port                = optional(string, "traffic-port")
+      path                = optional(string)
+      interval            = optional(number, 30)
+      timeout             = optional(number, 10)
+      healthy_threshold   = optional(number, 3)
+      unhealthy_threshold = optional(number, 3)
+      matcher             = optional(string)
+    }), null)
+    stickiness = optional(object({
+      enabled = optional(bool, true)
+      type    = optional(string, "source_ip")
+    }), null)
+    deregistration_delay = optional(number, 300)
+    cross_zone_enabled   = optional(bool, true)
+    tags                 = optional(map(string), {})
+  }))
+  default = {}
 }
 
-variable "nlb_target_protocol" {
-  description = "Target protocol for NLB target group"
-  type        = string
-  default     = "TCP"
-}
+variable "nlb_listeners" {
+  description = "NLB listeners"
 
-variable "nlb_target_type" {
-  description = "Target type for NLB target group"
-  type        = string
-  default     = "instance"
-}
+  type = list(object({
+    protocol          = string
+    port              = number
+    target_group_name = string
+    type              = optional(string, "forward")
+    certificate_arn   = optional(string) # Required only when protocol = TLS
+    ssl_policy        = optional(string) # Optional TLS policy
+  }))
 
-variable "nlb_enable_stickiness" {
-  type    = bool
-  default = true
-}
+  default = []
 
-variable "nlb_target_ips" {
-  description = "Optional list of IP addresses to register in the NLB target group when nlb_target_type is ip"
-  type        = list(string)
-  default     = []
-}
+  validation {
+    condition = alltrue([
+      for listener in var.nlb_listeners :
+      contains(
+        ["TCP", "TLS", "UDP", "TCP_UDP"],
+        listener.protocol
+      )
+    ])
 
-variable "nlb_listener_port" {
-  description = "Listener port for NLB"
-  type        = number
-  default     = 8080
-}
-
-variable "nlb_listener_protocol" {
-  description = "Listener protocol for NLB"
-  type        = string
-  default     = "TCP"
+    error_message = "NLB listener protocol must be TCP, TLS, UDP, or TCP_UDP."
+  }
 }
 
 variable "alb_name" {
@@ -455,34 +482,57 @@ variable "alb_name" {
   type        = string
 }
 
-variable "alb_target_group_name" {
-  description = "Name for the ALB target group"
-  type        = string
-  default     = "alb-tg"
+variable "alb_enable_public" {
+  description = "Whether to enable public access for the ALB"
+  type        = bool
+  default     = true
 }
 
-variable "alb_target_port" {
-  description = "Target port for ALB target group"
-  type        = number
-  default     = 80
+variable "alb_enable_deletion_protection" {
+  type    = bool
+  default = false
 }
 
-variable "alb_target_protocol" {
-  description = "Target protocol for ALB target group"
-  type        = string
-  default     = "HTTP"
+variable "alb_enable_logging" {
+  type    = bool
+  default = false
 }
 
-variable "alb_listener_port" {
-  description = "Listener port for ALB"
-  type        = number
-  default     = 80
+variable "alb_target_groups" {
+  type = map(object({
+    port        = number
+    protocol    = string
+    target_type = optional(string, "instance")
+    health_check = optional(object({
+      enabled             = optional(bool, true)
+      path                = optional(string, "/")
+      protocol            = optional(string, "HTTP")
+      matcher             = optional(string, "200-399")
+      interval            = optional(number, 30)
+      timeout             = optional(number, 5)
+      healthy_threshold   = optional(number, 2)
+      unhealthy_threshold = optional(number, 2)
+    }), null)
+    stickiness = optional(object({
+      enabled         = optional(bool, false)
+      type            = optional(string, "lb_cookie")
+      cookie_duration = optional(number, 86400)
+    }), null)
+    deregistration_delay = optional(number, 300)
+    tags                 = optional(map(string), {})
+  }))
+  default = {}
 }
 
-variable "alb_listener_protocol" {
-  description = "Listener protocol for ALB"
-  type        = string
-  default     = "HTTP"
+variable "alb_listeners" {
+  type = map(object({
+    port              = number
+    protocol          = string
+    ssl_policy        = optional(string)
+    certificate_arn   = optional(string)
+    target_group_name = string
+  }))
+  default = {}
 }
 
 variable "kms_key_name" {
