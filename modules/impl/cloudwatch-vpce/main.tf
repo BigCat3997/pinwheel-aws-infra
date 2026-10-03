@@ -95,7 +95,7 @@ module "local_logs_vpce" {
 }
 
 module "local_cloudwatch_log_group" {
-  source = "../../base/cloudwatch-log-group"
+  source = "../../base/cloudwatch-log-groups"
 
   log_groups = [
     {
