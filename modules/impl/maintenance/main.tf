@@ -194,35 +194,22 @@ module "local_web_ec2" {
 }
 
 
-module "local_alb" {
-  source = "../../base/alb"
+module "alb" {
+  source = "../../base/alb2"
 
-  name                 = substr("${var.name_prefix}-alb", 0, 32)
-  enable_public_access = true
-  subnet_ids           = values(module.local_subnet.public_subnets)
-  security_group_ids   = [module.local_sg_alb.id]
-  vpc_id               = module.local_vpc.id
+  name                       = var.alb_name
+  enable_public              = var.alb_enable_public
+  enable_deletion_protection = var.alb_enable_deletion_protection
+  vpc_id                     = module.local_vpc.id
+  subnet_ids                 = values(module.local_subnet.public_subnets)
+  security_group_ids         = [module.local_sg_alb.id]
+  target_groups              = var.alb_target_groups
+  listeners                  = var.alb_listeners
+  listener_rules             = local.active_alb_listener_rules
+  attachments                = local.combined_alb_attachments
+  tags                       = local.common_tags
 
-  target_group_name = substr("${var.name_prefix}-web-tg", 0, 32)
-  target_port       = var.instance_port
-  target_protocol   = "HTTP"
-  target_instance_ids = [
-    for _, inst in module.local_web_ec2 : inst.id
-  ]
-
-  health_check_matcher             = "200-399"
-  health_check_healthy_threshold   = 2
-  health_check_unhealthy_threshold = 2
-
-  listener_port     = var.alb_port
-  listener_protocol = "HTTP"
-
-  maintenance_mode         = var.maintenance_mode
-  lambda_function_arn      = module.local_maintenance_lambda.arn
-  lambda_function_name     = module.local_maintenance_lambda.name
-  lambda_target_group_name = substr("${var.name_prefix}-maint-tg", 0, 32)
-
-  tags = local.common_tags
+  depends_on = [module.local_web_ec2]
 }
 
 module "local_maintenance_s3" {
@@ -287,8 +274,12 @@ module "local_maintenance_lambda" {
   role_name           = module.local_lambda_iam_role.role_name
   role_arn            = module.local_lambda_iam_role.role_arn
   create_function_url = true
-  subnet_ids          = values(module.local_subnet.public_subnets)
-  security_group_ids  = [module.local_sg_lambda.id]
+
+  alb_invoke_target_group_arns = {
+    maintenance = module.alb.target_group_arns[var.maintenance_target_group_name]
+  }
+  subnet_ids         = values(module.local_subnet.public_subnets)
+  security_group_ids = [module.local_sg_lambda.id]
   env_vars = {
     BUCKET_NAME = var.s3_bucket_name
     OBJECT_KEY  = var.maintenance_object_key

@@ -32,6 +32,7 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+tfplan
 
 # Ignore file set environment variables
 execute.sh
@@ -44,3 +45,6 @@ local-data.json
 
 # python
 __pycache__
+
+# jenkins
+*@tmp

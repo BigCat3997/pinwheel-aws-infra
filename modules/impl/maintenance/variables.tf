@@ -134,3 +134,80 @@ variable "s3_interface_private_dns_only_for_inbound_resolver_endpoint" {
   type        = bool
   default     = false
 }
+
+# ── ALB ──────────────────────────────────────────────────────────────
+variable "alb_name" {
+  type = string
+}
+
+variable "alb_enable_public" {
+  type    = bool
+  default = true
+}
+
+variable "alb_enable_deletion_protection" {
+  type    = bool
+  default = false
+}
+
+variable "alb_target_groups" {
+  type = map(object({
+    port        = optional(number)
+    protocol    = optional(string)
+    target_type = optional(string, "instance")
+    health_check = optional(object({
+      enabled             = optional(bool, true)
+      path                = optional(string, "/")
+      protocol            = optional(string, "HTTP")
+      matcher             = optional(string, "200-399")
+      interval            = optional(number, 30)
+      timeout             = optional(number, 5)
+      healthy_threshold   = optional(number, 2)
+      unhealthy_threshold = optional(number, 2)
+    }), null)
+    stickiness = optional(object({
+      enabled         = optional(bool, false)
+      type            = optional(string, "lb_cookie")
+      cookie_duration = optional(number, 86400)
+    }), null)
+    deregistration_delay = optional(number, 300)
+    tags                 = optional(map(string), {})
+  }))
+  default = {}
+}
+
+variable "alb_listeners" {
+  type = map(object({
+    port              = number
+    protocol          = string
+    ssl_policy        = optional(string)
+    certificate_arn   = optional(string)
+    target_group_name = string
+  }))
+  default = {}
+}
+
+variable "alb_attachments" {
+  type = list(object({
+    target_group_name = string
+    target_name       = string
+    port              = optional(number)
+  }))
+  default = []
+}
+
+variable "maintenance_target_group_name" {
+  description = "Name of the Lambda target group used in maintenance mode"
+  type        = string
+}
+
+variable "alb_listener_rules" {
+  description = "Listener rules applied only when maintenance_mode is true"
+  type = map(object({
+    listener_name     = string
+    priority          = number
+    target_group_name = string
+    path_patterns     = list(string)
+  }))
+  default = {}
+}
