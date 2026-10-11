@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "2.2",
+  "description": "Install the CloudWatch agent, apply its config from Parameter Store, then verify it is running",
+  "mainSteps": [
+    {
+      "action": "aws:configurePackage",
+      "name": "installCloudWatchAgent",
+      "inputs": {
+        "name": "AmazonCloudWatchAgent",
+        "action": "Install"
+      }
+    },
+    {
+      "action": "aws:runDocument",
+      "name": "configureCloudWatchAgent",
+      "inputs": {
+        "documentType": "SSMDocument",
+        "documentPath": "AmazonCloudWatch-ManageAgent",
+        "documentParameters": {
+          "action": "configure",
+          "mode": "ec2",
+          "optionalConfigurationSource": "ssm",
+          "optionalConfigurationLocation": "${config_parameter_name}",
+          "optionalRestart": "yes"
+        }
+      }
+    },
+    {
+      "action": "aws:runShellScript",
+      "name": "verifyCloudWatchAgentRunning",
+      "inputs": {
+        "runCommand": [
+          "for i in 1 2 3 4 5 6; do",
+          "  out=$(/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status)",
+          "  echo \"$out\"",
+          "  echo \"$out\" | grep -q '\"status\": \"running\"' && echo 'CloudWatch agent is running' && exit 0",
+          "  sleep 5",
+          "done",
+          "echo 'CloudWatch agent is NOT running' >&2",
+          "exit 1"
+        ]
+      }
+    }
+  ]
+}
