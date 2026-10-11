@@ -1,6 +1,7 @@
 resource "aws_kms_key" "this" {
   description         = var.description
   enable_key_rotation = true
+  policy              = var.policy
   tags                = var.tags
 }
 

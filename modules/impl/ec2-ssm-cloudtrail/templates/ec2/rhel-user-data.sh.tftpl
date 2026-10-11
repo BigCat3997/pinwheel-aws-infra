@@ -1,0 +1,6 @@
+#!/bin/bash
+if ! systemctl list-unit-files | grep -q amazon-ssm-agent; then
+  dnf install -y https://s3.${aws_region}.amazonaws.com/amazon-ssm-${aws_region}/latest/linux_amd64/amazon-ssm-agent.rpm
+fi
+systemctl enable --now amazon-ssm-agent
+echo hello

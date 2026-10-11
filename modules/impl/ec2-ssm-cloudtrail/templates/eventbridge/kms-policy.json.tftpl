@@ -1,0 +1,35 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EnableAccountAdmin",
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::${account_id}:root" },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowEventBridgeUseOfKey",
+      "Effect": "Allow",
+      "Principal": { "Service": "events.amazonaws.com" },
+      "Action": ["kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"],
+      "Resource": "*",
+      "Condition": {
+        "StringLike": { "kms:EncryptionContext:aws:events:event-bus:arn": "arn:aws:events:${region}:${account_id}:event-bus/*" }
+      }
+    },
+    {
+      "Sid": "AllowAccountPrincipalsViaEventBridge",
+      "Effect": "Allow",
+      "Principal": { "AWS": "*" },
+      "Action": ["kms:Decrypt", "kms:GenerateDataKey", "kms:DescribeKey"],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:CallerAccount": "${account_id}",
+          "kms:ViaService": "events.${region}.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
