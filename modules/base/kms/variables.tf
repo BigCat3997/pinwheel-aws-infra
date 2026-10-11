@@ -14,3 +14,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "policy" {
+  description = "Key policy JSON (null uses the AWS default policy)"
+  type        = string
+  default     = null
+}
