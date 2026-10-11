@@ -76,6 +76,36 @@ module "local_ec2_sg" {
   tags = var.common_tags
 }
 
+module "local_rhel_ec2_sg" {
+  source = "../../base/sg"
+
+  name   = "${var.rhel_ec2_name}-sg"
+  vpc_id = module.local_vpc.id
+
+  # Internal only: SSH is allowed from the Amazon Linux EC2 (bastion) alone.
+  security_rules = [
+    {
+      from_port         = 22
+      to_port           = 22
+      protocol          = "tcp"
+      security_group_id = module.local_ec2_sg.id
+      description       = "SSH from the Amazon Linux EC2"
+    }
+  ]
+
+  egress_rules = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "Allow all outbound"
+    }
+  ]
+
+  tags = var.common_tags
+}
+
 module "local_vpc_endpoints_sg" {
   source = "../../base/sg"
 
@@ -89,6 +119,13 @@ module "local_vpc_endpoints_sg" {
       protocol          = "tcp"
       security_group_id = module.local_ec2_sg.id
       description       = "HTTPS from EC2 to SSM interface endpoints"
+    },
+    {
+      from_port         = 443
+      to_port           = 443
+      protocol          = "tcp"
+      security_group_id = module.local_rhel_ec2_sg.id
+      description       = "HTTPS from RHEL EC2 to SSM interface endpoints"
     }
   ]
 
@@ -170,9 +207,9 @@ module "local_rhel_ec2" {
   ami_id                       = local.rhel_ec2_ami_id
   instance_type                = var.rhel_ec2_instance_type
   ssh_user                     = "ec2-user"
-  subnet_id                    = local.subnet_ids_by_name[var.ec2_subnet_name]
-  security_group_ids           = [module.local_ec2_sg.id]
-  associate_public_ip          = var.ec2_associate_public_ip
+  subnet_id                    = local.subnet_ids_by_name[var.rhel_ec2_subnet_name]
+  security_group_ids           = [module.local_rhel_ec2_sg.id]
+  associate_public_ip          = false
   user_data                    = local.rhel_user_data
   instance_profile_name        = "${var.rhel_ec2_name}-profile"
   role_name                    = module.local_ec2_iam_role.role_name

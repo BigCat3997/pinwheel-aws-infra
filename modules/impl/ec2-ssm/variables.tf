@@ -148,6 +148,11 @@ variable "rhel_ec2_name" {
   type        = string
 }
 
+variable "rhel_ec2_subnet_name" {
+  description = "Private subnet name for the RHEL EC2 (no public IP; reachable only from the Amazon Linux EC2)"
+  type        = string
+}
+
 variable "rhel_ec2_version" {
   description = "RHEL release used to look up the AMI when rhel_ec2_ami_id is null"
   type        = string
