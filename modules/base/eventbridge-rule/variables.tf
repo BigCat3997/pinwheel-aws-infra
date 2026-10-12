@@ -44,10 +44,25 @@ variable "target_arn" {
   type        = string
 }
 
+variable "target_role_arn" {
+  description = "IAM role EventBridge assumes to reach the target (required for event bus targets)"
+  type        = string
+  default     = null
+}
+
 variable "input" {
   description = "Constant JSON passed to the target (null passes the matched event)"
   type        = string
   default     = null
+}
+
+variable "input_transformer" {
+  description = "Reshape the matched event before it reaches the target (overrides input)"
+  type = object({
+    input_paths    = map(string)
+    input_template = string
+  })
+  default = null
 }
 
 variable "lambda_function_name" {

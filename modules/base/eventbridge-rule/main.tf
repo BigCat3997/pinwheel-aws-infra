@@ -14,7 +14,17 @@ resource "aws_cloudwatch_event_target" "this" {
   event_bus_name = var.event_bus_name
   target_id      = var.target_id
   arn            = var.target_arn
-  input          = var.input
+  role_arn       = var.target_role_arn
+  input          = var.input_transformer == null ? var.input : null
+
+  dynamic "input_transformer" {
+    for_each = var.input_transformer == null ? [] : [var.input_transformer]
+
+    content {
+      input_paths    = input_transformer.value.input_paths
+      input_template = input_transformer.value.input_template
+    }
+  }
 }
 
 resource "aws_lambda_permission" "this" {
