@@ -107,3 +107,33 @@ variable "alb_invoke_target_group_arns" {
   type        = map(string)
   default     = {}
 }
+
+variable "dead_letter_target_arn" {
+  description = "SQS queue or SNS topic ARN that receives the event of an asynchronous invocation that still fails after its retries (null disables)"
+  type        = string
+  default     = null
+}
+
+variable "maximum_retry_attempts" {
+  description = "Retries of a failed asynchronous invocation, 0-2 (null keeps the AWS default of 2)"
+  type        = number
+  default     = null
+}
+
+variable "create_sqs_event_source" {
+  description = "Whether to create the SQS trigger (a static flag, because sqs_event_source_arn is often unknown at plan)"
+  type        = bool
+  default     = false
+}
+
+variable "sqs_event_source_arn" {
+  description = "SQS queue ARN that triggers the function (used when create_sqs_event_source is true)"
+  type        = string
+  default     = null
+}
+
+variable "sqs_batch_size" {
+  description = "Messages per invocation when sqs_event_source_arn is set"
+  type        = number
+  default     = 1
+}

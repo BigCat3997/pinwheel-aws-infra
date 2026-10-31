@@ -18,12 +18,36 @@ resource "aws_lambda_function" "this" {
     }
   }
 
+  dynamic "dead_letter_config" {
+    for_each = var.dead_letter_target_arn == null ? [] : [var.dead_letter_target_arn]
+
+    content {
+      target_arn = dead_letter_config.value
+    }
+  }
+
   vpc_config {
     subnet_ids         = var.subnet_ids
     security_group_ids = var.security_group_ids
   }
 
   tags = merge(var.tags, { Name = var.name })
+}
+
+resource "aws_lambda_function_event_invoke_config" "this" {
+  count = var.maximum_retry_attempts == null ? 0 : 1
+
+  function_name          = aws_lambda_function.this.function_name
+  maximum_retry_attempts = var.maximum_retry_attempts
+}
+
+resource "aws_lambda_event_source_mapping" "sqs" {
+  count = var.create_sqs_event_source ? 1 : 0
+
+  event_source_arn        = var.sqs_event_source_arn
+  function_name           = aws_lambda_function.this.arn
+  batch_size              = var.sqs_batch_size
+  function_response_types = ["ReportBatchItemFailures"]
 }
 
 resource "aws_lambda_function_url" "this" {
