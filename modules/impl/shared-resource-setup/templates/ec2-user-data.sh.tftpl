@@ -1,0 +1,73 @@
+#!/bin/bash
+set -euxo pipefail
+
+# The CloudWatch agent package comes from the AL2023 repos in S3 (S3 gateway endpoint)
+dnf install -y amazon-cloudwatch-agent
+
+cat > /usr/local/bin/collect-metrics.sh <<'SCRIPT'
+#!/bin/bash
+# Appends one JSON line with available memory, disk, and CPU every interval
+LOG_FILE=/var/log/resource-metrics.log
+INTERVAL=${interval_seconds}
+
+while true; do
+  read -r _ u1 n1 s1 i1 w1 q1 sq1 st1 _ < /proc/stat
+  sleep 1
+  read -r _ u2 n2 s2 i2 w2 q2 sq2 st2 _ < /proc/stat
+  total=$(( (u2+n2+s2+i2+w2+q2+sq2+st2) - (u1+n1+s1+i1+w1+q1+sq1+st1) ))
+  idle=$(( (i2+w2) - (i1+w1) ))
+  cpu_available=$(awk -v t="$total" -v i="$idle" 'BEGIN { printf "%.1f", (t > 0 ? i*100/t : 0) }')
+
+  mem_total_kb=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
+  mem_avail_kb=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)
+  mem_available_pct=$(awk -v a="$mem_avail_kb" -v t="$mem_total_kb" 'BEGIN { printf "%.1f", a*100/t }')
+
+  read -r disk_total_kb disk_avail_kb < <(df -Pk / | awk 'NR==2 {print $2, $4}')
+  disk_available_pct=$(awk -v a="$disk_avail_kb" -v t="$disk_total_kb" 'BEGIN { printf "%.1f", a*100/t }')
+
+  printf '{"timestamp":"%s","cpu_available_pct":%s,"memory_available_mb":%s,"memory_available_pct":%s,"disk_available_gb":%s,"disk_available_pct":%s}\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$cpu_available" "$((mem_avail_kb/1024))" "$mem_available_pct" \
+    "$((disk_avail_kb/1024/1024))" "$disk_available_pct" >> "$LOG_FILE"
+
+  sleep "$INTERVAL"
+done
+SCRIPT
+chmod +x /usr/local/bin/collect-metrics.sh
+
+cat > /etc/systemd/system/collect-metrics.service <<'UNIT'
+[Unit]
+Description=Write memory, disk, and CPU availability to a log file
+
+[Service]
+ExecStart=/usr/local/bin/collect-metrics.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+# The agent tails the metrics file and ships each line to the log group via the logs endpoint
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<'CONFIG'
+{
+  "agent": { "run_as_user": "root" },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/resource-metrics.log",
+            "log_group_name": "${log_group_name}",
+            "log_stream_name": "{instance_id}",
+            "retention_in_days": ${retention_in_days}
+          }
+        ]
+      }
+    }
+  }
+}
+CONFIG
+
+systemctl daemon-reload
+systemctl enable --now collect-metrics.service
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s \
+  -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
