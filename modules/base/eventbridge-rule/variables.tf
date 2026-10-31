@@ -76,3 +76,15 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "dead_letter_arn" {
+  description = "SQS queue ARN that receives events EventBridge cannot deliver to the target (null disables)"
+  type        = string
+  default     = null
+}
+
+variable "retry_maximum_attempts" {
+  description = "Delivery retries before an event goes to dead_letter_arn"
+  type        = number
+  default     = 5
+}

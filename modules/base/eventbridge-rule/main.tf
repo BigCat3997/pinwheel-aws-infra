@@ -17,6 +17,23 @@ resource "aws_cloudwatch_event_target" "this" {
   role_arn       = var.target_role_arn
   input          = var.input_transformer == null ? var.input : null
 
+  dynamic "dead_letter_config" {
+    for_each = var.dead_letter_arn == null ? [] : [var.dead_letter_arn]
+
+    content {
+      arn = dead_letter_config.value
+    }
+  }
+
+  dynamic "retry_policy" {
+    for_each = var.dead_letter_arn == null ? [] : [1]
+
+    content {
+      maximum_retry_attempts       = var.retry_maximum_attempts
+      maximum_event_age_in_seconds = 3600
+    }
+  }
+
   dynamic "input_transformer" {
     for_each = var.input_transformer == null ? [] : [var.input_transformer]
 
