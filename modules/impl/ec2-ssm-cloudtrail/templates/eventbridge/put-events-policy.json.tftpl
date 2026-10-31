@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ForwardToMonitoringBus",
+      "Effect": "Allow",
+      "Action": "events:PutEvents",
+      "Resource": "${event_bus_arn}"
+    },
+    {
+      "Sid": "EncryptForMonitoringBus",
+      "Effect": "Allow",
+      "Action": ["kms:GenerateDataKey", "kms:Decrypt", "kms:DescribeKey"],
+      "Resource": "${kms_key_arn}"
+    }
+  ]
+}

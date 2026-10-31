@@ -12,3 +12,10 @@ resource "aws_sns_topic_subscription" "this" {
   protocol  = each.value.protocol
   endpoint  = each.value.endpoint
 }
+
+resource "aws_sns_topic_policy" "this" {
+  count = var.policy == null ? 0 : 1
+
+  arn    = aws_sns_topic.this.arn
+  policy = var.policy
+}

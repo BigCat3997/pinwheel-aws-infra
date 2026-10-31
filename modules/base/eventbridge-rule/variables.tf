@@ -44,10 +44,25 @@ variable "target_arn" {
   type        = string
 }
 
+variable "target_role_arn" {
+  description = "IAM role EventBridge assumes to reach the target (required for event bus targets)"
+  type        = string
+  default     = null
+}
+
 variable "input" {
   description = "Constant JSON passed to the target (null passes the matched event)"
   type        = string
   default     = null
+}
+
+variable "input_transformer" {
+  description = "Reshape the matched event before it reaches the target (overrides input)"
+  type = object({
+    input_paths    = map(string)
+    input_template = string
+  })
+  default = null
 }
 
 variable "lambda_function_name" {
@@ -60,4 +75,16 @@ variable "tags" {
   description = "Common tags"
   type        = map(string)
   default     = {}
+}
+
+variable "dead_letter_arn" {
+  description = "SQS queue ARN that receives events EventBridge cannot deliver to the target (null disables)"
+  type        = string
+  default     = null
+}
+
+variable "retry_maximum_attempts" {
+  description = "Delivery retries before an event goes to dead_letter_arn"
+  type        = number
+  default     = 5
 }

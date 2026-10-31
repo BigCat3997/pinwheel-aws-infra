@@ -291,3 +291,76 @@ variable "sns_email_endpoints" {
   type        = list(string)
   default     = []
 }
+
+variable "iam_user_events_rule_name" {
+  description = "Name of the EventBridge rule that reports IAM user changes"
+  type        = string
+  default     = "bc-events-iam_user_changes-dev-0"
+}
+
+variable "iam_user_event_names" {
+  description = "IAM API calls that trigger an email"
+  type        = list(string)
+  default = [
+    "CreateUser",
+    "UpdateUser",
+    "DeleteUser",
+    "CreateLoginProfile",
+    "UpdateLoginProfile",
+    "DeleteLoginProfile",
+    "CreateAccessKey",
+    "UpdateAccessKey",
+    "DeleteAccessKey",
+    "AttachUserPolicy",
+    "DetachUserPolicy",
+    "PutUserPolicy",
+    "DeleteUserPolicy",
+    "AddUserToGroup",
+    "RemoveUserFromGroup",
+  ]
+}
+
+variable "monitoring_event_bus_name" {
+  description = "Custom EventBridge bus that receives monitoring events (encrypted with the EventBridge KMS key)"
+  type        = string
+  default     = "bc-eb-mon-dev-0"
+}
+
+variable "activity_rule_prefix" {
+  description = "Name prefix for the EC2/RDS activity EventBridge rules"
+  type        = string
+  default     = "bc-events"
+}
+
+variable "ec2_tracked_event_names" {
+  description = "EC2 API calls that trigger an email (start, stop, terminate, modify, ...)"
+  type        = list(string)
+  default = [
+    "RunInstances",
+    "StartInstances",
+    "StopInstances",
+    "RebootInstances",
+    "TerminateInstances",
+    "ModifyInstanceAttribute",
+    "ModifyInstanceMetadataOptions",
+  ]
+}
+
+variable "rds_tracked_event_names" {
+  description = "RDS API calls that trigger an email (create, start, stop, reboot, modify, delete, ...)"
+  type        = list(string)
+  default = [
+    "CreateDBInstance",
+    "StartDBInstance",
+    "StopDBInstance",
+    "RebootDBInstance",
+    "ModifyDBInstance",
+    "DeleteDBInstance",
+    "CreateDBCluster",
+    "StartDBCluster",
+    "StopDBCluster",
+    "ModifyDBCluster",
+    "DeleteDBCluster",
+    "FailoverDBCluster",
+  ]
+}

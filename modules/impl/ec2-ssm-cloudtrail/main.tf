@@ -475,5 +475,121 @@ module "notifications_topic" {
       endpoint = email
     }
   ]
+  policy = templatefile("${path.module}/templates/sns/topic-policy.json.tftpl", {
+    account_id = data.aws_caller_identity.current.account_id
+    topic_arn  = local.sns_topic_arn
+  })
+  tags = var.common_tags
+}
+
+# IAM user changes are only delivered to the default bus, so a rule there forwards
+# them to the monitoring bus, where a second rule formats them and emails SNS.
+# IAM events are recorded in us-east-1 (this module's region) and reach EventBridge
+# through CloudTrail without needing a trail of your own.
+module "monitoring_event_bus" {
+  source = "../../base/eventbridge-bus"
+
+  name               = var.monitoring_event_bus_name
+  description        = "Monitoring events (IAM user changes) routed to SNS"
+  kms_key_identifier = module.eventbridge_kms.arn
+  tags               = var.common_tags
+}
+
+module "eventbridge_forward_iam_role" {
+  source = "../../base/iam-role"
+
+  name                    = "${var.monitoring_event_bus_name}-forward-role"
+  path                    = "/"
+  description             = "Lets EventBridge forward events from the default bus to ${var.monitoring_event_bus_name}"
+  assume_role_policy_file = "${path.module}/resources/iam/events-assume-role.json"
+  inline_policies = {
+    "put-events-monitoring-bus" = templatefile("${path.module}/templates/eventbridge/put-events-policy.json.tftpl", {
+      event_bus_arn = module.monitoring_event_bus.arn
+      kms_key_arn   = module.eventbridge_kms.arn
+    })
+  }
+
+  tags = var.common_tags
+}
+
+module "iam_user_changes_forward_rule" {
+  source = "../../base/eventbridge-rule"
+
+  name            = "${var.iam_user_events_rule_name}-forward"
+  description     = "Forward IAM user change events from the default bus to ${var.monitoring_event_bus_name}"
+  event_bus_name  = "default"
+  event_pattern   = local.iam_user_changes_pattern
+  target_arn      = module.monitoring_event_bus.arn
+  target_role_arn = module.eventbridge_forward_iam_role.role_arn
+  tags            = var.common_tags
+}
+
+module "iam_user_changes_rule" {
+  source = "../../base/eventbridge-rule"
+
+  name           = var.iam_user_events_rule_name
+  description    = "Notify SNS when IAM users or their access are created, changed or removed"
+  event_bus_name = module.monitoring_event_bus.name
+  event_pattern  = local.iam_user_changes_pattern
+  target_arn     = module.notifications_topic.arn
+
+  input_transformer = {
+    input_paths = {
+      action  = "$.detail.eventName"
+      actor   = "$.detail.userIdentity.arn"
+      target  = "$.detail.requestParameters.userName"
+      time    = "$.detail.eventTime"
+      ip      = "$.detail.sourceIPAddress"
+      account = "$.account"
+      error   = "$.detail.errorCode"
+    }
+    input_template = "\"IAM user change detected: <action> on user '<target>' by <actor> at <time> from <ip> (account <account>, error: <error>)\""
+  }
+
+  tags = var.common_tags
+}
+
+# EC2 and RDS activity (start, stop, terminate, modify, ...): same two-hop path as the
+# IAM alerts, one pair of rules per service.
+module "activity_forward_rule" {
+  source   = "../../base/eventbridge-rule"
+  for_each = local.activity_tracking
+
+  name           = "${var.activity_rule_prefix}-${each.key}_activity-forward"
+  description    = "Forward ${each.key} activity events from the default bus to ${var.monitoring_event_bus_name}"
+  event_bus_name = "default"
+  event_pattern = jsonencode({
+    "detail-type" = ["AWS API Call via CloudTrail"]
+    detail = {
+      eventSource = [each.value.event_source]
+      eventName   = each.value.event_names
+    }
+  })
+  target_arn      = module.monitoring_event_bus.arn
+  target_role_arn = module.eventbridge_forward_iam_role.role_arn
+  tags            = var.common_tags
+}
+
+module "activity_rule" {
+  source   = "../../base/eventbridge-rule"
+  for_each = local.activity_tracking
+
+  name           = "${var.activity_rule_prefix}-${each.key}_activity"
+  description    = "Notify SNS about ${each.key} activity"
+  event_bus_name = module.monitoring_event_bus.name
+  event_pattern = jsonencode({
+    "detail-type" = ["AWS API Call via CloudTrail"]
+    detail = {
+      eventSource = [each.value.event_source]
+      eventName   = each.value.event_names
+    }
+  })
+  target_arn = module.notifications_topic.arn
+
+  input_transformer = {
+    input_paths    = each.value.input_paths
+    input_template = each.value.input_template
+  }
+
   tags = var.common_tags
 }
